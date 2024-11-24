@@ -6,7 +6,7 @@ import logging
 class Parser():
     def __init__(self, params):
         # Токен обновлять раз в две недели
-        self.hh_api_token = 'APPLVEN3QFNGDQDGQCC79JTO7IDLASRLV3RR5RRLB4JEHQD7AD5KJGA7TJ3UISDB'
+        self.hh_api_token = 'APPLVU2H540D1C9NE0FB8R3TMPDSLDA0TB8NKV8G9SNM4MKNECJIMD5UHIK87OGL'
         self.url = 'https://api.hh.ru/vacancies'
         self.headers = {
             'Authorization': f'Bearer {self.hh_api_token}',

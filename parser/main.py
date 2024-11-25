@@ -1,13 +1,18 @@
 import asyncio
+import os
 import requests
+from dotenv import load_dotenv
 import aiohttp
 import logging
 
+load_dotenv()
+
 class Parser():
+
     def __init__(self, params):
         # Токен обновлять раз в две недели
-        self.hh_api_token = 'APPLVU2H540D1C9NE0FB8R3TMPDSLDA0TB8NKV8G9SNM4MKNECJIMD5UHIK87OGL'
-        self.url = 'https://api.hh.ru/vacancies'
+        self.hh_api_token = os.getenv("HH_TOKEN")
+        self.url = os.getenv("HH_URL")
         self.headers = {
             'Authorization': f'Bearer {self.hh_api_token}',
             'User-Agent': 'Python/requests',

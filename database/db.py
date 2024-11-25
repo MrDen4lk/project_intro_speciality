@@ -31,8 +31,8 @@ map_of_employment = {"full": "Полный",
                      "probation" : "Испытательный срок"
                     }
 
-# номер города
-number_of_town = {
+# номер города для парсера
+update_for_req_town = {
   "Москва": 1,
   "Санкт-Петербург": 2,
   "Новосибирск": 3,
@@ -48,4 +48,27 @@ number_of_town = {
   "Воронеж": 13,
   "Пермь": 14,
   "Волгоград": 15
+}
+
+update_for_req_salary = {
+    "Да" : "True",
+    "Нет" : "False"
+}
+
+update_for_req_exp = {
+    "Без опыта" : "noExperience",
+    "От 1 до 3 лет" : "between1And3",
+    "От 3 до 6 лет" : "between3And6",
+    "Больше 6 лет" : "moreThan6"
+}
+
+update_for_empl = {
+    "Полный" : "full",
+    "Неполный" : "part",
+    "Проектный" : "project",
+    "Испытательный срок" : "probation"
+}
+
+users = {
+
 }

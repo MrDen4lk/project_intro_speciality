@@ -1,6 +1,7 @@
 import logging
 import os
 from aiogram import Dispatcher, Bot
+from aiogram.exceptions import TelegramBadRequest
 from dotenv import load_dotenv
 import asyncio
 from handlers import router
@@ -22,11 +23,10 @@ async def main() -> None:
 if __name__ == "__main__":
     # вывод в терминал действий бота, выключить в проде!!!
     logging.basicConfig(level=logging.INFO)
-
     # запуск бота
     try:
         asyncio.run(main())
     except BaseException:
-        print("Configured with errors")
+        print("Finished with errors")
     finally:
         print("EXIT")

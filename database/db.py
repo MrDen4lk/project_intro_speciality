@@ -69,6 +69,6 @@ update_for_empl = {
     "Испытательный срок" : "probation"
 }
 
-users = {
+'''users = {
 
-}
+}'''

@@ -1,7 +1,6 @@
 import logging
 import os
 from aiogram import Dispatcher, Bot
-from aiogram.exceptions import TelegramBadRequest
 from dotenv import load_dotenv
 import asyncio
 from handlers import router

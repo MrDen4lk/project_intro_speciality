@@ -2,6 +2,7 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
+
 import database.db as db
 
 # клавиатура для кнопки поиска в клавиатуре
@@ -42,6 +43,7 @@ async def inline_salary_button() -> InlineKeyboardMarkup:
     salary_button = InlineKeyboardBuilder()
     for item in db.list_of_salary:
         salary_button.add(InlineKeyboardButton(text=db.map_of_salary[item], callback_data=item))
+    #salary_button.add(InlineKeyboardButton(text="Предыдущий шаг",  callback_data="salary_back"))
     salary_button.add(InlineKeyboardButton(text="Завершить поиск", callback_data="salary_end"))
     return salary_button.adjust(2).as_markup()
 
@@ -62,6 +64,7 @@ async def inline_experience_button() -> InlineKeyboardMarkup:
     experience_button = InlineKeyboardBuilder()
     for item in db.list_of_experience:
         experience_button.add(InlineKeyboardButton(text=db.map_of_experience[item], callback_data=item))
+    #experience_button.add(InlineKeyboardButton(text="Предыдущий шаг",  callback_data="exp_back"))
     experience_button.add(InlineKeyboardButton(text="Завершить поиск", callback_data="exp_end"))
     return experience_button.adjust(2).as_markup()
 
@@ -82,6 +85,7 @@ async def inline_employment_button() -> InlineKeyboardMarkup:
     employment_button = InlineKeyboardBuilder()
     for item in db.list_of_employment:
         employment_button.add(InlineKeyboardButton(text=db.map_of_employment[item], callback_data=item))
+    #employment_button.add(InlineKeyboardButton(text="Предыдущий шаг",  callback_data="empl_back"))
     employment_button.add(InlineKeyboardButton(text="Завершить поиск", callback_data="empl_end"))
     return employment_button.adjust(2).as_markup()
 

@@ -10,6 +10,8 @@ import database.db as db
 # создание роутера для связи с диспетчером
 router = Router()
 
+first_button = 0
+
 # класс запроса пользователя
 class Request(StatesGroup):
     search = State()
@@ -32,6 +34,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     await message.answer(f"Привет, @{message.from_user.username}!\nЯ помогу тебе найти работу мечты",
                          reply_markup=kb.start_button,
                          resize_keyboard=True)
+
 # обработчик /help
 @router.message(Command(commands=["help"]))
 async def cmd_help(message: Message) -> None:
@@ -43,8 +46,9 @@ async def cmd_town(message: Message, state: FSMContext) -> None:
     await state.set_state(Request.town)
     await message.answer("Начнем поиск!",
                          reply_markup=ReplyKeyboardRemove())
-    await message.answer("Укажите город, в которым ищите работу:",
+    inl_button = await message.answer("Укажите город, в которым ищите работу:",
                          reply_markup=await kb.inline_town_button())
+    first_button = inl_button.message_id
 
 # запись города и запрос на только с ЗП
 @router.message(Request.town)
@@ -102,14 +106,12 @@ async def cmd_empl_button(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(Request.text)
     await callback.message.edit_reply_markup(reply_markup=await kb.inline_employment_button_chosen(callback.data))
     await callback.message.answer("Напишите описание вакансии:")
-                                  #reply_markup=await kb.inline_text())
 
 # обработка описания вакансии
 @router.message(Request.text)
 async def cmd_text(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id
     await state.update_data(text=message.text)
-    #await message.edit_reply_markup(reply_markup=None)
     data = await state.get_data()
     await state.clear()
     await message.answer("Поиск•••")
@@ -189,15 +191,6 @@ async def cmd_end(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer("Поиск завершен!",
                                   reply_markup=kb.start_button)
 
-# обработка преждевременного конца запроса text
-#@router.callback_query(F.data == "text_end")
-#async def cmd_end(callback: CallbackQuery, state: FSMContext) -> None:
-#    await state.clear()
-#    await state.set_state(Request.search)
-#    await callback.message.edit_reply_markup(reply_markup=await kb.inline_text_chosen(callback.data))
-#    await callback.message.answer("Поиск завершен!",
-#                                  reply_markup=kb.start_button)
-
 # обработка конца запроса вакансий
 @router.callback_query(F.data == "final_end")
 async def cmd_final_end(callback: CallbackQuery, state: FSMContext) -> None:
@@ -207,3 +200,24 @@ async def cmd_final_end(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.edit_reply_markup(reply_markup=await kb.inline_pages_builder_chosen(user_id))
     await callback.message.answer("Поиск завершен!",
                                   reply_markup=kb.start_button)
+
+# обработка шага назад от запроса salary
+@router.callback_query(F.data == "salary_back")
+async def cmd_end(callback: CallbackQuery, state: FSMContext) -> None:
+    #await callback.bot.edit_message_reply_markup(chat_id=callback.message.chat.id,
+    #                                    message_id=first_button,
+    #                                    reply_markup=None)
+    await state.set_state(Request.town)
+    await callback.message.delete()
+
+# обработка шага назад от запроса experience
+@router.callback_query(F.data == "exp_back")
+async def cmd_end(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(Request.salary)
+    await callback.message.delete()
+
+# обработка шага назад от запроса employment
+@router.callback_query(F.data == "empl_back")
+async def cmd_end(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(Request.experience)
+    await callback.message.delete()

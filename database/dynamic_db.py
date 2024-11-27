@@ -43,6 +43,7 @@ async def add_user(name, answer_for_req, page_now, total_page, history_req, hist
     async with new_session() as session:
         async with session.begin():
             new_user = User(
+                id=id,
                 name=name,
                 answer_for_req=answer_for_req,
                 page_now=page_now,
@@ -243,3 +244,13 @@ class Towns(Base):
     city_name = Column(String, primary_key=True)
     city_id= Column(Integer, nullable=False)
 
+# включение значений в таблицу towns из файла
+async def add_cities(file_path):
+    async with new_session as session:        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+            # Преобразуем данные в объекты Towns
+        for city_name, city_id in data.items():
+            town = Towns(city_name=city_name, city_id=city_id)
+            session.add(town)

@@ -1,7 +1,6 @@
-from datetime import datetime
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Column, Integer, String, JSON, ARRAY, select
+from sqlalchemy import Column, Integer, String, JSON, ARRAY, select, CheckConstraint
 import json
 
 from config import Settings
@@ -127,7 +126,6 @@ async def update_user(user_id: int, **kwargs):
 
             await session.commit()
             await session.refresh(user)
-
             return user
         else:
             return None
@@ -145,3 +143,103 @@ async def delete_user(user_id: int):
             return True
         else:
             return False
+    
+# таблица salary
+class Salary(Base):
+    __tablename__ = 'salary'
+
+    id = Column(String, primary_key=True)
+    tg_int = Column(String, nullable=False)
+
+    # задаём фиксированные значения в таблице 
+    __table_args__ = (
+        CheckConstraint("id IN ('yes', 'no')", name="check_id"),
+        CheckConstraint("tg_interface IN ('да', 'нет')", name="check_tg_interface"),
+    )
+
+# интерфейс доступа к таблице Salary
+async def get_salary(tag: str):
+    async with new_session as session:
+        result = await session.execute(select(Salary).filter_by(id=tag))
+        salary = result.scalar_one_or_none()
+
+        await session.commit()
+
+        return salary
+
+# таблица experience   
+class Experience(Base):
+    __tablename__ = 'experience'
+
+    id = Column(String, primary_key=True)
+    tg_int = Column(String, nullable=False)
+
+    # задаём фиксированные значения в таблице 
+    __table_args__ = (
+        CheckConstraint("id IN ('noexp', '1to3', '3to6', 'more6')", name="check_id"),
+        CheckConstraint("tg_interface IN ('Без опыта', 'От 1 до 3 лет', 'От 3 до 6 лет', 'Больше 6 лет')", name="check_tg_interface"),
+    )
+
+# интерфейс доступа к таблице Salary
+async def get_experience(tag: str):
+    async with new_session as session:
+        result = await session.execute(select(Experience).filter_by(id=tag))
+        experience = result.scalar_one_or_none()
+
+        await session.commit()
+
+        return experience
+    
+# таблица employment
+class Employment(Base):
+    __tablename__ = 'employment'
+
+    id = Column(String, primary_key=True)
+    tg_int = Column(String, nullable=False)
+
+    # задаём фиксированные значения в таблице 
+    __table_args__ = (
+        CheckConstraint("id IN ('full', 'part', 'project', 'probation')", name="check_id"),
+        CheckConstraint("tg_interface IN ('Полный', 'Неполный', 'Проектный', 'Испытательный срок')", name="check_tg_interface"),
+    )
+
+# интерфейс доступа к таблице Employment
+async def get_employment(tag: str):
+    async with new_session as session:
+        result = await session.execute(select(Employment).filter_by(id=tag))
+        employment = result.scalar_one_or_none()
+
+        await session.commit()
+
+        return employment
+    
+# таблица employment
+class Employment(Base):
+    __tablename__ = 'employment'
+
+    id = Column(String, primary_key=True)
+    tg_int = Column(String, nullable=False)
+
+    # задаём фиксированные значения в таблице 
+    __table_args__ = (
+        CheckConstraint("id IN ('full', 'part', 'project', 'probation')", name="check_id"),
+        CheckConstraint("tg_interface IN ('Полный', 'Неполный', 'Проектный', 'Испытательный срок')", name="check_tg_interface"),
+    )
+
+# интерфейс доступа к таблице Employment
+async def get_employment(tag: str):
+    async with new_session as session:
+        result = await session.execute(select(Employment).filter_by(id=tag))
+        employment = result.scalar_one_or_none()
+
+        await session.commit()
+
+        return employment
+    
+# таблица towns
+class Towns(Base):
+    __tablename__ = 'towns'
+
+    city_name = Column(String, primary_key=True)
+    city_id= Column(Integer, nullable=False)
+

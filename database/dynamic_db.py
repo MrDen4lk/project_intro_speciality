@@ -286,19 +286,20 @@ async def get_user(user_id: int):
             return user
 
 # функция для обновления пользователя
-async def update_user(user_id: int, dict):
+async def update_user(user_id: int, dict : dict):
 
     async with new_session() as session:
         async with session.begin():
-            user = await get_user(user_id)
+            result = await session.execute(select(User).filter_by(id=user_id))
+            user = result.scalar_one_or_none()
 
             for key, value in dict.items():
                 setattr(user, key, value)
 
-            await session.refresh(user)
+            #await session.refresh(user)
             #await session.commit()
 
-            #return user
+            return user
 
 # удаление пользователя (ну сдох чувак, удалился тг). Вообще не знаю надо ли нам это, но пусть будет
 async def delete_user(user_id: int):
@@ -381,9 +382,9 @@ async def main():
     a.total_page = 15
     # как можешь узреть спокойно вытаскивается абсолютно все 
     #print(a.name, a.page_now, a.total_page)
-    await update_user(1, {'name' : 'Денис'})
+    await update_user(1, {'name' : 'Денис', 'page_now' : 4}) # передаешь словарь аргумент класса : новое значение
     b = await get_user(1)
-    print(b.name)
+    print(b.name, b.page_now)
 
     # вот эта шняга не работает
     #a = get_column('user','name')

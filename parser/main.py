@@ -1,10 +1,11 @@
 import asyncio
 import os
 import requests
-from dotenv import load_dotenv
 import aiohttp
 import logging
+from dotenv import load_dotenv
 
+# получение данных из dotenv
 load_dotenv()
 
 class Parser():

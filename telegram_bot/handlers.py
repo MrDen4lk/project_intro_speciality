@@ -1,11 +1,14 @@
+from symtable import Class
+
 from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup,State
 from aiogram.fsm.context import FSMContext
-import keyboards as kb
-from user_requests import make_req
+import telegram_bot.keyboards as kb
+from telegram_bot.user_requests import make_req
 import database.db as db
+from database.dynamic_db import User
 
 # создание роутера для связи с диспетчером
 router = Router()
@@ -46,9 +49,8 @@ async def cmd_town(message: Message, state: FSMContext) -> None:
     await state.set_state(Request.town)
     await message.answer("Начнем поиск!",
                          reply_markup=ReplyKeyboardRemove())
-    inl_button = await message.answer("Укажите город, в которым ищите работу:",
+    await message.answer("Укажите город, в которым ищите работу:",
                          reply_markup=await kb.inline_town_button())
-    first_button = inl_button.message_id
 
 # запись города и запрос на только с ЗП
 @router.message(Request.town)

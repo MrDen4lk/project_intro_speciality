@@ -1,7 +1,7 @@
 import requests
 import json
 
-def get_cities():
+def get_cities() -> json:
     url = "https://api.hh.ru/areas"
     response = requests.get(url)
 

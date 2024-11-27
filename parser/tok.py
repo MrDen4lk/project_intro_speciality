@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
+# получение данных из dotenv
 load_dotenv()
 
 client_id = os.getenv("CLIENT_ID")

@@ -3,9 +3,9 @@ import os
 from aiogram import Dispatcher, Bot
 from dotenv import load_dotenv
 import asyncio
-from handlers import router
+from telegram_bot.handlers import router
 
-# получение данных из dotenv файла
+# получение данных из dotenv
 load_dotenv()
 
 # инициализация подключения бота

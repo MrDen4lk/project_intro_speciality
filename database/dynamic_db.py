@@ -3,19 +3,16 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Column, Integer, String, JSON, ARRAY, select
 import json
-
-from config import Settings
+from database.config import database_url_asyncpg
 
 # создаем движок нашей БД, c данными из .env (echo - выводит всё)
-engine = create_async_engine(url=Settings.DATABASE_URL_asyncpg, echo=True)
+engine = create_async_engine(url=database_url_asyncpg(), echo=True)
 # создаем менеджер асинх сессий (сессия, хаха, сессия...)
 new_session = async_sessionmaker(engine, expire_on_commit=False)
-
 
 # базовый класс для таблички
 class Base(DeclarativeBase):
     pass
-
 
 # класс описывающий структуру таблицы пользователя
 class User(Base):
@@ -43,7 +40,6 @@ async def delete_tables():
 
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
-
 
 # добавляем пользователя в таблицу
 async def add_user(name, answer_for_req, page_now, total_page, history_req, history_ans):
@@ -83,7 +79,6 @@ async def get_all_users_json():
             # Возвращаем результат в формате JSON
             return json.dumps(results, ensure_ascii=False)
 
-
 # возвращаем JSON с данными о пользователе по айдишнику
 async def get_user_by_id_json(user_id: int):
     async with new_session() as session:
@@ -110,7 +105,6 @@ async def get_user_by_id_json(user_id: int):
 
             return json.dumps({"error": "User not found"})
 
-
 # функция для получения пользователя по айдишнику
 async def get_user(user_id: int):
     async with new_session() as session:
@@ -120,7 +114,6 @@ async def get_user(user_id: int):
         await session.commit()
 
         return user
-
 
 # функция для обновления пользователя
 async def update_user(user_id: int, **kwargs):

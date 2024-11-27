@@ -14,7 +14,10 @@ def get_cities() -> json:
                 if 'areas' in area and area['areas']:
                     parse_areas(area['areas'])
                 else:
-                    cities_dict[area['name']] = int(area['id'])
+                    area_name = str(area['name'])
+                    if area_name.count("(") != 0:
+                        area_name = area_name[:area_name.find("(")]
+                    cities_dict[area_name] = int(area['id'])
 
         # Начинаем обработку с корневых элементов
         parse_areas(areas_data)

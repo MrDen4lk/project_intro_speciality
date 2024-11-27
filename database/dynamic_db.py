@@ -81,69 +81,72 @@ async def get_all_users_json():
 async def get_user_by_id_json(user_id: int):
 
     async with new_session() as session:
-        # Выполняем запрос к базе данных
-        query = select(User).where(User.id == user_id)
-        result = await session.execute(query)
-        user = result.scalar_one_or_none()
+        async with session.begin():
+            # Выполняем запрос к базе данных
+            query = select(User).where(User.id == user_id)
+            result = await session.execute(query)
+            user = result.scalar_one_or_none()
 
-        if user:
+            if user:
 
-            # Преобразуем объект пользователя в JSON
-            user_dict = {
-                "id": user.id,
-                "name": user.name,
-                "answer_for_req": user.answer_for_req,
-                "page_now": user.page_now,
-                "total_page": user.total_page,
-                "history_req": user.history_req,
-                "history_ans": user.history_ans
-            }
+                # Преобразуем объект пользователя в JSON
+                user_dict = {
+                    "id": user.id,
+                    "name": user.name,
+                    "answer_for_req": user.answer_for_req,
+                    "page_now": user.page_now,
+                    "total_page": user.total_page,
+                    "history_req": user.history_req,
+                    "history_ans": user.history_ans
+                }
 
-            return json.dumps(user_dict)
-        else:
-
-            return json.dumps({"error": "User not found"})
+                return json.dumps(user_dict)
+            else:
+                return json.dumps({"error": "User not found"})
         
 # функция для получения пользователя по айдишнику
 async def get_user(user_id: int):
 
     async with new_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalar_one_or_none()
+        async with session.begin():
+            result = await session.execute(select(User).filter_by(id=user_id))
+            user = result.scalar_one_or_none()
 
-        await session.commit()
+            await session.commit()
 
-        return user
+            return user
 
 # функция для обновления пользователя
 async def update_user(user_id: int, **kwargs):
 
     async with new_session() as session:
-        user = await get_user(user_id)
+        async with session.begin():
+            user = await get_user(user_id)
 
-        if user:
-            for key, value in kwargs.items():
-                setattr(user, key, value)
+            if user:
+                for key, value in kwargs.items():
+                    setattr(user, key, value)
 
-            await session.commit()
-            await session.refresh(user)
-            return user
-        else:
-            return None
+                await session.commit()
+                await session.refresh(user)
+                return user
+            else:
+                return None
 
 # удаление пользователя (ну сдох чувак, удалился тг). Вообще не знаю надо ли нам это, но пусть будет
 async def delete_user(user_id: int):
 
     async with new_session() as session:
-        user = await get_user(id)
+        async with session.begin():
+            user = await get_user(id)
 
-        if user:
-            await session.delete(user)
-            await session.commit()
+            if user:
+                await session.delete(user)
+                await session.commit()
 
-            return True
-        else:
-            return False
+                return True
+            else:
+                return False
     
 # таблица salary
 class Salary(Base):

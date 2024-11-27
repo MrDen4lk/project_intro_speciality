@@ -204,7 +204,7 @@ class Experience(Base):
         CheckConstraint("tg_int IN ('Без опыта', 'От 1 до 3 лет', 'От 3 до 6 лет', 'Больше 6 лет')", name="check_tg_int"),
     )
 # передаем значения в experience
-async def add_experienc():
+async def add_experience():
     async with new_session as session:
         async with session.begin():
             map_of_experience = {"noexp": "Без опыта",
@@ -227,7 +227,7 @@ async def get_experience(tag: str):
 
             await session.commit()
 
-        return experience
+            return experience
     
 # таблица employment
 class Employment(Base):

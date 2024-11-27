@@ -102,17 +102,20 @@ async def add_user(id : int, name : str, answer_for_req : dict, page_now : int, 
 
     async with new_session() as session:
         async with session.begin():
-            new_user = insert(User).values(
-                id=id,
-                name=name,
-                answer_for_req=answer_for_req,
-                page_now=page_now,
-                total_page=total_page,
-                history_req=history_req,
-                history_ans=history_ans
-            )
-            await session.execute(new_user)
-            await session.commit()
+            result = await session.execute(select(User).filter_by(id=id))
+            user = result.scalar_one_or_none()
+            if not user:
+                new_user = insert(User).values(
+                    id=id,
+                    name=name,
+                    answer_for_req=answer_for_req,
+                    page_now=page_now,
+                    total_page=total_page,
+                    history_req=history_req,
+                    history_ans=history_ans
+                )
+                await session.execute(new_user)
+                await session.commit()
 
 # возвращаем JSON с данными о всех пользователях 
 async def get_all_users_json():

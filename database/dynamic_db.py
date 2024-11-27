@@ -18,7 +18,7 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False) # имя пользователя
     answer_for_req = Column(JSON, nullable=False) # JSON с ответом на запрос
     page_now = Column(Integer, nullable=False, default=0) # номер показываемой вакансии из списка

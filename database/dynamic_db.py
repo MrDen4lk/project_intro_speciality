@@ -116,6 +116,9 @@ async def add_user(id : int, name : str, answer_for_req : dict, page_now : int, 
                 )
                 await session.execute(new_user)
                 await session.commit()
+            else:
+                # напиши что нужно
+                pass
 
 # возвращаем JSON с данными о всех пользователях 
 async def get_all_users_json():

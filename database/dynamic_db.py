@@ -38,7 +38,7 @@ async def delete_tables():
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
 # добавляем пользователя в таблицу
-async def add_user(name, answer_for_req, page_now, total_page, history_req, history_ans):
+async def add_user(name : str, answer_for_req : dict, page_now : int, total_page : int, history_req : list, history_ans : list):
 
     async with new_session() as session:
         async with session.begin():
@@ -52,7 +52,7 @@ async def add_user(name, answer_for_req, page_now, total_page, history_req, hist
                 history_ans=history_ans
             )
             session.add(new_user)
-    return new_user
+            await session.commit()
 
 # возвращаем JSON с данными о всех пользователях 
 async def get_all_users_json():
@@ -158,6 +158,20 @@ class Salary(Base):
         CheckConstraint("tg_interface IN ('да', 'нет')", name="check_tg_interface"),
     )
 
+# передаем значения в salary
+async def add_salary():
+    async with new_session as session:
+        async with session.begin():
+            map_of_salary = {"yes" : "Да",
+                            "no" : "Нет"
+                            }
+
+            for id_value, tg_int_value in map_of_salary.items():
+                new_salary = Salary(id=id_value, tg_int=tg_int_value)
+                session.add(new_salary)
+
+            session.commit() 
+
 # интерфейс доступа к таблице Salary
 async def get_salary(tag: str):
     async with new_session as session:
@@ -180,6 +194,20 @@ class Experience(Base):
         CheckConstraint("id IN ('noexp', '1to3', '3to6', 'more6')", name="check_id"),
         CheckConstraint("tg_interface IN ('Без опыта', 'От 1 до 3 лет', 'От 3 до 6 лет', 'Больше 6 лет')", name="check_tg_interface"),
     )
+# передаем значения в experience
+async def add_employment():
+    async with new_session as session:
+        async with session.begin():
+            map_of_experience = {"noexp": "Без опыта",
+                                "1to3": "От 1 до 3 лет",
+                                "3to6" : "От 3 до 6 лет",
+                                "more6" : "Больше 6 лет"
+                                }
+            for id_value, tg_int_value in map_of_experience.items():
+                new_experience = Experience(id=id_value, tg_int=tg_int_value)
+                session.add(new_experience)
+
+            session.commit()  
 
 # интерфейс доступа к таблице Salary
 async def get_experience(tag: str):
@@ -203,6 +231,21 @@ class Employment(Base):
         CheckConstraint("id IN ('full', 'part', 'project', 'probation')", name="check_id"),
         CheckConstraint("tg_interface IN ('Полный', 'Неполный', 'Проектный', 'Испытательный срок')", name="check_tg_interface"),
     )
+
+# передаем наши фискисрованные значения таблице employment
+async def add_employment():
+    async with new_session as session:
+        async with session.begin():
+            map_of_employment = {"full": "Полный",
+                                "part": "Неполный",
+                                "project" : "Проектный",
+                                "probation" : "Испытательный срок"
+                                }
+            for id_value, tg_int_value in map_of_employment.items():
+                new_employment = Employment(id=id_value, tg_int=tg_int_value)
+                session.add(new_employment)
+
+            session.commit()    
 
 # интерфейс доступа к таблице Employment
 async def get_employment(tag: str):
@@ -240,6 +283,22 @@ class Sort(Base):
     id = Column(String, primary_key=True)
     tg_int = Column(String, nullable=False)
 
+    __table_args__ = (
+        CheckConstraint()
+    )
+
+async def add_sort():
+    async with new_session as session:
+        map_of_sort = {"relevance" : "Релевантности",
+                        "publication_time" : "Времени публикации",
+                        "salary_down" : "Убыванию ЗП",
+                        "salary_up" : "Возрастанию ЗП"
+                        }
+        for id_value, tg_int_value in map_of_sort.items():
+            new_sort = Sort(id=id_value, tg_int=tg_int_value)
+            session.add(new_sort)
+
+        session.commit()
 
 # SELECT *колонка* IN *таблица* 
 async def get_column(table_name : str, column_name : str) -> list:

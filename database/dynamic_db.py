@@ -213,36 +213,15 @@ async def get_employment(tag: str):
         await session.commit()
 
         return employment
-    
-# таблица employment
-class Employment(Base):
-    __tablename__ = 'employment'
 
-    id = Column(String, primary_key=True)
-    tg_int = Column(String, nullable=False)
-
-    # задаём фиксированные значения в таблице 
-    __table_args__ = (
-        CheckConstraint("id IN ('full', 'part', 'project', 'probation')", name="check_id"),
-        CheckConstraint("tg_interface IN ('Полный', 'Неполный', 'Проектный', 'Испытательный срок')", name="check_tg_interface"),
-    )
-
-# интерфейс доступа к таблице Employment
-async def get_employment(tag: str):
-    async with new_session as session:
-        result = await session.execute(select(Employment).filter_by(id=tag))
-        employment = result.scalar_one_or_none()
-
-        await session.commit()
-
-        return employment
-    
 # таблица towns
 class Towns(Base):
     __tablename__ = 'towns'
 
     city_name = Column(String, primary_key=True)
     city_id= Column(Integer, nullable=False)
+    file_path = 'inp.txt'
+
 
 # включение значений в таблицу towns из файла
 async def add_cities(file_path):
@@ -250,7 +229,48 @@ async def add_cities(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-            # Преобразуем данные в объекты Towns
+        # Преобразуем данные в объекты Towns
         for city_name, city_id in data.items():
             town = Towns(city_name=city_name, city_id=city_id)
             session.add(town)
+
+class Sort(Base):
+    __tablename__ = 'sort'
+
+    id = Column(String, primary_key=True)
+    tg_int = Column(String, nullable=False)
+
+
+# SELECT *колонка* IN *таблица* 
+async def get_column(table_name : str, column_name : str) -> list:
+    async with new_session as session:
+        
+        # Определим соот. переданного названия таблицы и её модели внутри БД
+        table_mapping = {
+            'salary' : Salary,
+            'experience' : Experience,
+            'towns' : Towns,
+            'employment' : Employment,
+            'sort' : Sort,
+        }
+
+        model = table_mapping.get(table_name)
+
+        # Запрос в таблицу model по column_name
+        query = select(model.column_name)
+        
+        res = await session.execute(query)
+        session.execute()
+
+        return res.all()
+    
+        '''если вдруг не заработало
+        1) return [str(i) for i in res.all()
+        если и это не заработало:
+        2)
+        query = select(getattr(model, column_name))
+    
+        result = await session.execute(query)
+        
+        return [row[0] for row in result.scalars().all()]
+        '''

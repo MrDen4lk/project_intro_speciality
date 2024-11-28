@@ -364,12 +364,37 @@ async def update_user(user_id: int, dict : dict):
             user = result.scalar_one_or_none()
 
             for key, value in dict.items():
-                setattr(user, key, value)
+                if key == 'history_req' or key == 'history_ans':
+                    ar = user.history_req.copy()
+                    for el in value:
+                        ar.append(el)
+                    setattr(user, key, ar)
+                else:
+                    setattr(user, key, value)
 
-            #await session.refresh(user)
-            #await session.commit()
+            await session.commit()
+        
+async def id_check(table_name : str, id):
+    async with new_session() as session:
+        table_mapping = {
+                'users' : User,
+                'salary' : Salary,
+                'experience' : Experience,
+                'towns' : Towns,
+                'cities' : Cities,
+                'employment' : Employment,
+                'sort' : Sort,
+            }
 
-            return user
+        model = table_mapping.get(table_name)
+
+        # Запрос в таблицу model по column_name
+        query = await session.execute(select(model).filter_by(id=id))
+
+        if query.scalar_one_or_none():
+            return True
+        else:
+            return False
 
 # удаление пользователя (ну сдох чувак, удалился тг). Вообще не знаю надо ли нам это, но пусть будет
 async def delete_user(user_id: int):
@@ -389,25 +414,25 @@ async def delete_user(user_id: int):
 # SELECT *колонка* IN *таблица* 
 async def get_column(table_name : str, column_name : str) -> list:
     async with new_session() as session:
-        async with session.begin():
-            # Определим соот. переданного названия таблицы и её модели внутри БД
-            table_mapping = {
-                'salary' : Salary,
-                'experience' : Experience,
-                'towns' : Towns,
-                'cities' : Cities,
-                'employment' : Employment,
-                'sort' : Sort,
-            }
+        # Определим соот. переданного названия таблицы и её модели внутри БД
+        table_mapping = {
+            'users' : User,
+            'salary' : Salary,
+            'experience' : Experience,
+            'towns' : Towns,
+            'cities' : Cities,
+            'employment' : Employment,
+            'sort' : Sort,
+        }
 
-            model = table_mapping.get(table_name)
+        model = table_mapping.get(table_name)
 
-            # Запрос в таблицу model по column_name
-            query = select(getattr(model, column_name))
-    
-            result = await session.execute(query)
-            
-            return [row[0] for row in result.scalars().all()]
+        # Запрос в таблицу model по column_name
+        query = select(getattr(model, column_name))
+
+        result = await session.execute(query)
+        
+        return [row[0] for row in result.scalars().all()]
 
 async def start_database() -> None:
     await delete_tables()
@@ -423,6 +448,27 @@ async def start_database() -> None:
     await add_experience()
     await add_employment()
     await add_sort()
+    await add_user(
 
+        id=1,
+
+        name="Имя пользователя",
+
+        answer_for_req={"ключ": "значение"},
+
+        page_now=1,
+
+        total_page=10,
+
+        history_req=["запрос1", "запрос2"],
+
+        history_ans=["ответ1", "ответ2"]
+
+    )
+    await update_user(1, {'name':'Денис','history_req' : ["abobs"]})
+    a = await get_user(1)
+    print(a.history_req, a.name)
+    print(await id_check('users', 4))
+    print(await get_column('salary','id'))
 if __name__ == "__main__":
     asyncio.run(start_database())

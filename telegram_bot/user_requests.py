@@ -1,19 +1,19 @@
-import asyncio
-import json
 from parser.main import Parser
-import database.db as db
+import database.dynamic_db as ddb
 
 async def make_req(data: dict) -> list:
     # формирование данных для запроса
     req = {
-        "area" : db.update_for_req_town[data["town"]],
+        "area" : (await ddb.get_city(data["town"])).city_id,
         "text" : data["text"],
         "per_page" : 50,
-        "only_with_salary" : db.update_for_req_salary[data["salary"]],
-        "experience" : db.update_for_req_exp[data["experience"]],
-        "employment" : db.update_for_empl[data["employment"]],
-        "sort" : "publication_time"
+        "only_with_salary" :(await ddb.rev_get_salary(data["salary"])).id,
+        "experience" : (await ddb.rev_get_experience(data["experience"])).id,
+        "employment" : (await ddb.rev_get_employment(data["employment"])).id,
+        "sort" : (await ddb.rev_get_sort(data["sort"])).id
     }
+
+    print(req)
 
     # отправка запроса и получение результата
     answer = Parser(req)
@@ -39,6 +39,7 @@ async def make_req(data: dict) -> list:
         else:
             salary_info = "Зарплата не указана"
 
+        # формирование данных для return
         back_req = {
             "title" : title,
             "employer" : employer,

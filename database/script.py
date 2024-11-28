@@ -1,8 +1,13 @@
 import requests
 import json
+import os
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_cities() -> json:
-    url = "https://api.hh.ru/areas"
+    url = os.getenv("HH_URL_AREAS")
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -31,4 +36,3 @@ if __name__ == "__main__":
     cities_dict = get_cities()
     with open("inp.txt", "w") as inp:
         inp.write(json.dumps(cities_dict, ensure_ascii=False, indent=4))
-    #print(cities_dict['Москва'])

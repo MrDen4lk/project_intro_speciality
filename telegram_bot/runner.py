@@ -3,6 +3,7 @@ import os
 from aiogram import Dispatcher, Bot
 from dotenv import load_dotenv
 import asyncio
+
 from telegram_bot.handlers import router
 
 # получение данных из dotenv
@@ -22,6 +23,7 @@ async def main() -> None:
 if __name__ == "__main__":
     # вывод в терминал действий бота, выключить в проде!!!
     logging.basicConfig(level=logging.INFO)
+
     # запуск бота
     try:
         asyncio.run(main())

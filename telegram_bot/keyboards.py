@@ -149,7 +149,7 @@ async def inline_pages_builder(user_id) -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="<=", callback_data=("prev" if (data.vac_now != 1) else "pressed")),
         InlineKeyboardButton(text=str(data.vac_now)+"/"+str(data.vac_total), callback_data="pressed"),
         InlineKeyboardButton(text="=>", callback_data=("next" if (data.vac_now !=data.vac_total) else "pressed")))
-    inline_pages.row(InlineKeyboardButton(text="Ещё", callback_data="pressed"))
+    inline_pages.row(InlineKeyboardButton(text="Ещё", callback_data="morevac"))
     inline_pages.row(InlineKeyboardButton(text="Завершить поиск", callback_data="final_end"))
 
     return inline_pages.as_markup()

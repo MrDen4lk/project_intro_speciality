@@ -5,7 +5,10 @@ from aiogram.fsm.state import StatesGroup,State
 from aiogram.fsm.context import FSMContext
 import json
 
+from xyzservices.providers import data_path
+
 import telegram_bot.keyboards as kb
+from database.dynamic_db import update_user
 from telegram_bot.user_requests import make_req
 import database.dynamic_db as ddb
 
@@ -41,6 +44,7 @@ async def cmd_help(message: Message) -> None:
 @router.message(F.text == "Искать🔎")
 async def cmd_town(message: Message, state: FSMContext) -> None:
     await state.set_state(Request.town) # установка состояния для town
+    await ddb.update_user(message.from_user.id, {"page" : 0})
     await message.answer("Начнем поиск!",
                          reply_markup=ReplyKeyboardRemove())
     await message.answer("Укажите город, в которым ищите работу:",
@@ -126,7 +130,6 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
     vac_now = 1 # текущая вакансия
     vac_total = len(data_from_parser) # всего вакансий на странице
     txt = ""
-    print(type(data))
     for item in data_from_parser:
         txt += json.dumps(item, ensure_ascii=False) + "#"
     await ddb.update_user(user_id, {"vac_now" : vac_now, "vac_total" : vac_total,
@@ -178,14 +181,15 @@ async def cmd_more(callback: CallbackQuery):
         await callback.answer(text="Вакансий больше нет", show_alert=True)
     else:
         await ddb.update_user(callback.from_user.id, {"page" : data.page + 1})
-        data_from_parser = await make_req(json.loads(data.history_req[-1]), data.page + 1)  # запрос в парсер
+        request_to_parser = json.loads(data.history_req[-1])
+        data_from_parser = await make_req(request_to_parser, data.page + 1)  # запрос в парсер
         vac_now = 1
         vac_total = len(data_from_parser)
         txt = ""
         for item in data_from_parser:
             txt += json.dumps(item, ensure_ascii=False) + "#"
         await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page,
-                                                               "history_req" : [json.dumps(data, ensure_ascii=False)],
+                                                               "history_req" : [json.dumps(request_to_parser, ensure_ascii=False)],
                                                                "history_ans" : [txt]})
         if vac_total == 0:
             text = "Подходящих вакансий не найдено"

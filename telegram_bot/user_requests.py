@@ -1,26 +1,25 @@
 from parser.main import Parser
+
 import database.dynamic_db as ddb
 
-async def make_req(data: dict) -> list:
+async def make_req(data: dict, page: int) -> list:
     # формирование данных для запроса
     req = {
         "area" : (await ddb.get_city(data["town"])).city_id,
         "text" : data["text"],
         "per_page" : 50,
-        "only_with_salary" :(await ddb.rev_get_salary(data["salary"])).id,
-        "experience" : (await ddb.rev_get_experience(data["experience"])).id,
-        "employment" : (await ddb.rev_get_employment(data["employment"])).id,
-        "sort" : (await ddb.rev_get_sort(data["sort"])).id
+        "only_with_salary" :(await ddb.get_salary(data["salary"], "value")).key,
+        "experience" : (await ddb.get_experience(data["experience"], "value")).key,
+        "employment" : (await ddb.get_employment(data["employment"], "value")).key,
+        "sort" : (await ddb.get_sort(data["sort"], "value")).key
     }
-
-    print(req)
 
     # отправка запроса и получение результата
     answer = Parser(req)
     back_return = []
 
     # форматирование полученных данных
-    for req_answer in await answer.main(0):
+    for req_answer in await answer.main(page):
         title = req_answer.get('name')
         employer = req_answer.get('employer', {}).get('name')
         salary = req_answer.get('salary')
@@ -44,7 +43,7 @@ async def make_req(data: dict) -> list:
             "title" : title,
             "employer" : employer,
             "salary_info" : salary_info,
-            "url" : url_vacancy
+            "url" : url_vacancy,
         }
         back_return.append(back_req)
 

@@ -3,10 +3,10 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup,State
 from aiogram.fsm.context import FSMContext
+import json
 
 import telegram_bot.keyboards as kb
 from telegram_bot.user_requests import make_req
-import database.db as db
 import database.dynamic_db as ddb
 
 # создание роутера для связи с диспетчером
@@ -24,10 +24,10 @@ class Request(StatesGroup):
 
 # обработчик /start
 @router.message(CommandStart())
-async def cmd_start(message: Message, state: FSMContext) -> None:
+async def cmd_start(message: Message) -> None:
     # добавление пользователя в БД
-    await ddb.add_user(id=message.from_user.id, name=message.from_user.username,
-                       answer_for_req={}, page_now=0, total_page=0, history_req=[], history_ans=[])
+    await ddb.add_user(user_id=message.from_user.id, name=message.from_user.username,
+                       vac_now=0, vac_total=0, page=0, history_req=[], history_ans=[])
     await message.answer(f"Привет, @{message.from_user.username}!\nЯ помогу тебе найти работу мечты",
                          reply_markup=kb.start_button,
                          resize_keyboard=True)
@@ -50,7 +50,8 @@ async def cmd_town(message: Message, state: FSMContext) -> None:
 @router.message(Request.town)
 async def cmd_salary(message: Message, state: FSMContext) -> None:
     # проверка на нахождение введенного города в списке HH
-    if message not in db.map_of_towns.values():
+    print(message.text, await ddb.get_column("cities", "city_name"))
+    if message.text not in (await ddb.get_column("cities", "city_name")):
         await message.answer("К сожалению, пока этот город недоступен\nНапишите, пожалуйста, другой")
     else:
         await state.update_data(town=message.text) # запись в поле town
@@ -59,9 +60,9 @@ async def cmd_salary(message: Message, state: FSMContext) -> None:
                              reply_markup=await kb.inline_salary_button())
 
 # Обработка выбора города кроме другого и запрос на salary
-@router.callback_query(F.data.in_(db.list_of_towns[:-1]))
+@router.callback_query(F.data.in_(["Moscow", "Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny"]))
 async def cmd_town_button(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(town=(await ddb.get_town(callback.data)).tg_int) # запись данных в поле town
+    await state.update_data(town=(await ddb.get_town(callback.data, "key")).value) # запись данных в поле town
     await state.set_state(Request.salary) # установка состояния для salary
     await callback.message.edit_reply_markup(
         reply_markup=await kb.inline_town_button_chosen(callback.data))
@@ -77,9 +78,9 @@ async def cmd_other_town_button(callback: CallbackQuery, state: FSMContext) -> N
     await callback.message.answer("Напишите ваш город:")
 
 # Обработка выбора salary и запрос на experience
-@router.callback_query(F.data.in_(db.list_of_salary))
+@router.callback_query(F.data.in_(["True", "False"]))
 async def cmd_salary_button(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(salary=(await ddb.get_salary(callback.data)).tg_int) # запись данных в поле salary
+    await state.update_data(salary=(await ddb.get_salary(callback.data, "key")).value) # запись данных в поле salary
     await state.set_state(Request.experience) # установка состояния для experience
     await callback.message.edit_reply_markup(
         reply_markup=await kb.inline_salary_button_chosen(callback.data))
@@ -87,9 +88,9 @@ async def cmd_salary_button(callback: CallbackQuery, state: FSMContext) -> None:
                                   reply_markup=await kb.inline_experience_button())
 
 # Обработка выбора experience и запрос на employment
-@router.callback_query(F.data.in_(db.list_of_experience))
+@router.callback_query(F.data.in_(["noExperience", "between1And3", "between3And6", "moreThan6"]))
 async def cmd_exp_button(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(experience=(await ddb.get_experience(callback.data)).tg_int) # запись данных в поле experience
+    await state.update_data(experience=(await ddb.get_experience(callback.data, "key")).value) # запись данных в поле experience
     await state.set_state(Request.employment) # установка состояния для employment
     await callback.message.edit_reply_markup(
         reply_markup=await kb.inline_experience_button_chosen(callback.data))
@@ -97,18 +98,18 @@ async def cmd_exp_button(callback: CallbackQuery, state: FSMContext) -> None:
                                   reply_markup=await kb.inline_employment_button())
 
 # Обработка выбора employment и запрос на sort
-@router.callback_query(F.data.in_(db.list_of_employment))
+@router.callback_query(F.data.in_(["full", "part", "project", "probation"]))
 async def cmd_empl_button(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(employment=(await ddb.get_employment(callback.data)).tg_int) # запись данных в поле employment
+    await state.update_data(employment=(await ddb.get_employment(callback.data, "key")).value) # запись данных в поле employment
     await state.set_state(Request.sort) # установка состояния для sort
     await callback.message.edit_reply_markup(reply_markup=await kb.inline_employment_button_chosen(callback.data))
     await callback.message.answer("Сортировать по:",
                                   reply_markup=await kb.inline_sort_button())
 
 # # Обработка выбора sort и запрос на text
-@router.callback_query(F.data.in_(db.list_of_sort))
+@router.callback_query(F.data.in_(["relevance", "publication_time", "salary_desc", "salary_asc"]))
 async def cmd_sort_button(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(sort=(await ddb.get_sort(callback.data)).tg_int) # запись данных в поле sort
+    await state.update_data(sort=(await ddb.get_sort(callback.data, "key")).value) # запись данных в поле sort
     await state.set_state(Request.text) # установка состояния для text
     await callback.message.edit_reply_markup(reply_markup=await kb.inline_sort_button_chosen(callback.data))
     await callback.message.answer("Напишите описание вакансии:")
@@ -121,11 +122,17 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
     data = await state.get_data() # запрос данных из Requests
     await state.clear() # очистка состояния
     await message.answer("Поиск•••")
-    data_from_parser = await make_req(data) # запрос в парсер
-    page_now = 1 # текущая страница
-    total_page = len(data_from_parser) # всего страниц
-    await ddb.update_user(user_id, {"answer_for_req" : data_from_parser, "page_now" : page_now, "total_page" : total_page}) # обновление данных в БД
-    if total_page == 0:
+    data_from_parser = await make_req(data, 0) # запрос в парсер
+    vac_now = 1 # текущая вакансия
+    vac_total = len(data_from_parser) # всего вакансий на странице
+    txt = ""
+    print(type(data))
+    for item in data_from_parser:
+        txt += json.dumps(item, ensure_ascii=False) + "#"
+    await ddb.update_user(user_id, {"vac_now" : vac_now, "vac_total" : vac_total,
+                                             "history_req" : [json.dumps(data, ensure_ascii=False)],
+                                             "history_ans" : [txt]}) # обновление данных в БД
+    if vac_total == 0:
         text = "Подходящих вакансий не найдено"
         await message.answer(text,
                              reply_markup=kb.start_button,
@@ -142,11 +149,11 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
 async def cmd_next(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id  # получение ID пользователя
     data = await ddb.get_user(user_id) # получение данных из БД
-    await ddb.update_user(user_id, {"page_now" : (data.page_now + 1)}) # запись данных в БД
-    text = (f"✔ {data.answer_for_req[data.page_now]["title"]}\n"
-            f"✔ {data.answer_for_req[data.page_now]["employer"]}\n"
-            f"✔ {data.answer_for_req[data.page_now]["salary_info"]}\n"
-            f"✔ {data.answer_for_req[data.page_now]["url"]}")
+    await ddb.update_user(user_id, {"vac_now" : (data.vac_now + 1)}) # запись данных в БД
+    text = (f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["title"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["employer"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["salary_info"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["url"]}")
     await callback.message.edit_text(text,
                                      reply_markup=await kb.inline_pages_builder(user_id))
 
@@ -155,13 +162,44 @@ async def cmd_next(callback: CallbackQuery) -> None:
 async def cmd_prev(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id # получение ID пользователя
     data = await ddb.get_user(user_id)  # получение данных из БД
-    await ddb.update_user(user_id, {"page_now" : (data.page_now - 1)}) # запись данных в БД
-    text = (f"✔ {data.answer_for_req[data.page_now - 2]["title"]}\n"
-            f"✔ {data.answer_for_req[data.page_now - 2]["employer"]}\n"
-            f"✔ {data.answer_for_req[data.page_now - 2]["salary_info"]}\n"
-            f"✔ {data.answer_for_req[data.page_now - 2]["url"]}")
+    await ddb.update_user(user_id, {"vac_now" : (data.vac_now - 1)}) # запись данных в БД
+    text = (f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["title"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["employer"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["salary_info"]}\n"
+            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["url"]}")
     await callback.message.edit_text(text,
                                      reply_markup=await kb.inline_pages_builder(user_id))
+
+# обработка варианте ещё при выводе вакансий
+@router.callback_query(F.data == "morevac")
+async def cmd_more(callback: CallbackQuery):
+    data = await ddb.get_user(callback.from_user.id)
+    if data.vac_total < 50:
+        await callback.answer(text="Вакансий больше нет", show_alert=True)
+    else:
+        await ddb.update_user(callback.from_user.id, {"page" : data.page + 1})
+        data_from_parser = await make_req(json.loads(data.history_req[-1]), data.page + 1)  # запрос в парсер
+        vac_now = 1
+        vac_total = len(data_from_parser)
+        txt = ""
+        for item in data_from_parser:
+            txt += json.dumps(item, ensure_ascii=False) + "#"
+        await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page,
+                                                               "history_req" : [json.dumps(data, ensure_ascii=False)],
+                                                               "history_ans" : [txt]})
+        if vac_total == 0:
+            text = "Подходящих вакансий не найдено"
+            await callback.message.answer(text,
+                                 reply_markup=kb.start_button,
+                                 resize_keyboard=True)
+        else:
+            text = (f"✔ {data_from_parser[0]["title"]}\n✔ {data_from_parser[0]["employer"]}\n"
+                    f"✔ {data_from_parser[0]["salary_info"]}\n✔ {data_from_parser[0]["url"]}")
+
+            await callback.message.edit_text(text,
+                                             reply_markup=await kb.inline_pages_builder(callback.from_user.id))
+
+
 
 # обработка завершить запрос в town
 @router.callback_query(F.data == "town_end")
@@ -211,27 +249,3 @@ async def cmd_final_end(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.edit_reply_markup(reply_markup=await kb.inline_pages_builder_chosen(user_id))
     await callback.message.answer("Поиск завершен!",
                                   reply_markup=kb.start_button)
-
-# обработка шага назад от запроса salary
-@router.callback_query(F.data == "salary_back")
-async def cmd_salary_back(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(Request.town)
-    await callback.message.delete()
-
-# обработка шага назад от запроса experience
-@router.callback_query(F.data == "exp_back")
-async def cmd_exp_back(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(Request.salary)
-    await callback.message.delete()
-
-# обработка шага назад от запроса employment
-@router.callback_query(F.data == "empl_back")
-async def cmd_empl_back(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(Request.experience)
-    await callback.message.delete()
-
-# обработка шага назад от запроса sort
-@router.callback_query(F.data == "sort_back")
-async def cmd_sort_back(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.set_state(Request.employment)
-    await callback.message.delete()

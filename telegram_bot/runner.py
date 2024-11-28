@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # запуск бота
     try:
         asyncio.run(main())
-    except BaseException:
+    except Exception:
         print("Finished with errors")
     finally:
         print("EXIT")

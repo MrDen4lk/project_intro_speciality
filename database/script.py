@@ -1,3 +1,5 @@
+# Вытаскивает список городов и их id
+
 import requests
 import json
 import os

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# создаем движок нашей БД, c данными из .env (echo - выводит всё )
+# создаем движок нашей БД, c данными из .env (echo - выводит всё)
 engine = create_async_engine(url=(f"postgresql+asyncpg://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}"
                                  f"@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}"),
                                     echo=True)
@@ -25,32 +25,11 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False) # имя пользователя
-    answer_for_req = Column(JSON, nullable=False) # JSON с ответом на запрос
-    page_now = Column(Integer, nullable=False, default=0) # номер показываемой вакансии из списка
-    total_page = Column(Integer, nullable=False, default=0) # всего доступно вакансий по запросу
+    vac_now = Column(Integer, nullable=False, default=0) # номер показываемой вакансии из списка
+    vac_total = Column(Integer, nullable=False, default=0) # всего доступно вакансий по запросу
+    page = Column(Integer, nullable=False, default=0) # текущая страница поиска в парсере
     history_req = Column(ARRAY(String), default=list) # история запросов
     history_ans = Column(ARRAY(String), default=list) # история ответов
-
-# таблица salary
-class Salary(Base):
-    __tablename__ = 'salary'
-
-    id = Column(String, primary_key=True)
-    tg_int = Column(String, nullable=False)
-
-# таблица experience   
-class Experience(Base):
-    __tablename__ = 'experience'
-
-    id = Column(String, primary_key=True)
-    tg_int = Column(String, nullable=False)
-
-# таблица employment
-class Employment(Base):
-    __tablename__ = 'employment'
-
-    id = Column(String, primary_key=True)
-    tg_int = Column(String, nullable=False)
 
 # таблица citis
 class Cities(Base):
@@ -60,19 +39,44 @@ class Cities(Base):
     city_id= Column(Integer, nullable=False)
     file_path = 'inp.txt'
 
-
 # таблица towns
 class Towns(Base):
     __tablename__ = 'towns'
 
     id = Column(String, primary_key=True)
-    tg_int= Column(String, nullable=False)
+    key = Column(String, nullable=False)
+    value = Column(String, nullable=False)
+
+# таблица salary
+class Salary(Base):
+    __tablename__ = 'salary'
+
+    id = Column(String, primary_key=True)
+    key = Column(String, nullable=False)
+    value = Column(String, nullable=False)
+
+# таблица experience   
+class Experience(Base):
+    __tablename__ = 'experience'
+
+    id = Column(String, primary_key=True)
+    key = Column(String, nullable=False)
+    value = Column(String, nullable=False)
+
+# таблица employment
+class Employment(Base):
+    __tablename__ = 'employment'
+
+    id = Column(String, primary_key=True)
+    key = Column(String, nullable=False)
+    value = Column(String, nullable=False)
 
 class Sort(Base):
     __tablename__ = 'sort'
 
     id = Column(String, primary_key=True)
-    tg_int = Column(String, nullable=False)
+    key = Column(String, nullable=False)
+    value = Column(String, nullable=False)
 
 # создаем таблицу с исп. PostgreSQL
 async def create_tables():
@@ -86,19 +90,19 @@ async def delete_tables():
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
 # добавляем пользователя в таблицу
-async def add_user(id : int, name : str, answer_for_req : dict, page_now : int, total_page : int, history_req : list, history_ans : list):
+async def add_user(user_id : int, name : str, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list):
 
     async with new_session() as session:
         async with session.begin():
-            result = await session.execute(select(User).filter_by(id=id))
+            result = await session.execute(select(User).filter_by(id=user_id))
             user = result.scalar_one_or_none()
             if not user:
                 new_user = insert(User).values(
-                    id=id,
+                    id=user_id,
                     name=name,
-                    answer_for_req=answer_for_req,
-                    page_now=page_now,
-                    total_page=total_page,
+                    vac_now=vac_now,
+                    vac_total=vac_total,
+                    page=page,
                     history_req=history_req,
                     history_ans=history_ans
                 )
@@ -108,57 +112,10 @@ async def add_user(id : int, name : str, answer_for_req : dict, page_now : int, 
                 # напиши что нужно
                 pass
 
-# передаем значения в salary
-async def add_salary():
-    async with new_session() as session:
-        async with session.begin():
-            map_of_salary = {
-                "True" : "Да",
-                "False" : "Нет"
-            }
-
-            for id_value, tg_int_value in map_of_salary.items():
-                new_salary = insert(Salary).values(id=id_value, tg_int=tg_int_value)
-                await session.execute(new_salary)
-    
-            await session.commit() 
-
-# передаем значения в experience
-async def add_experience():
-    async with new_session() as session:
-        async with session.begin():
-            map_of_experience = {
-                "noExperience": "Без опыта",
-                "between1And3": "От 1 до 3 лет",
-                "between3And6" : "От 3 до 6 лет",
-                "moreThan6" : "Больше 6 лет",
-                }
-            for id_value, tg_int_value in map_of_experience.items():
-                new_experience = insert(Experience).values(id=id_value, tg_int=tg_int_value)
-                await session.execute(new_experience)
-
-            await session.commit()  
-
-# передаем наши фискисрованные значения таблице employment
-async def add_employment():
-    async with new_session() as session:
-        async with session.begin():
-            map_of_employment = {
-                "full": "Полный",
-                "part": "Неполный",
-                "project" : "Проектный",
-                "probation" : "Испытательный срок",
-            }
-            for id_value, tg_int_value in map_of_employment.items():
-                new_employment = insert(Employment).values(id=id_value, tg_int=tg_int_value)
-                await session.execute(new_employment)
-
-        await session.commit()    
-
 # включение значений в таблицу cities из файла
 async def add_cities(file_path):
-    async with new_session() as session: 
-        async with session.begin():       
+    async with new_session() as session:
+        async with session.begin():
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
@@ -182,9 +139,63 @@ async def add_towns():
                 "Nizhny": "Нижний Новгород",
                 "other": "Другой"
             }
+            i = 0
             for id_value, tg_int_value in map_of_towns.items():
-                new_town = insert(Towns).values(id=id_value, tg_int=tg_int_value)
+                new_town = insert(Towns).values(id=str(i), key=id_value, value=tg_int_value)
+                i += 1
                 await session.execute(new_town)
+
+        await session.commit()
+
+# передаем значения в salary
+async def add_salary():
+    async with new_session() as session:
+        async with session.begin():
+            map_of_salary = {
+                "True" : "Да",
+                "False" : "Нет"
+            }
+            i = 0
+            for id_value, tg_int_value in map_of_salary.items():
+                new_salary = insert(Salary).values(id=str(i), key=id_value, value=tg_int_value)
+                i += 1
+                await session.execute(new_salary)
+    
+            await session.commit() 
+
+# передаем значения в experience
+async def add_experience():
+    async with new_session() as session:
+        async with session.begin():
+            map_of_experience = {
+                "noExperience": "Без опыта",
+                "between1And3": "От 1 до 3 лет",
+                "between3And6" : "От 3 до 6 лет",
+                "moreThan6" : "Больше 6 лет",
+                }
+            i = 0
+            for id_value, tg_int_value in map_of_experience.items():
+                new_experience = insert(Experience).values(id=str(i), key=id_value, value=tg_int_value)
+                i += 1
+                await session.execute(new_experience)
+
+            await session.commit()  
+
+# передаем наши фискисрованные значения таблице employment
+async def add_employment():
+    async with new_session() as session:
+        async with session.begin():
+            map_of_employment = {
+                "full": "Полный",
+                "part": "Неполный",
+                "project" : "Проектный",
+                "probation" : "Испытательный срок",
+            }
+            i = 0
+            for id_value, tg_int_value in map_of_employment.items():
+                new_employment = insert(Employment).values(id=str(i), key=id_value, value=tg_int_value)
+                i += 1
+                await session.execute(new_employment)
 
         await session.commit()
 
@@ -197,8 +208,10 @@ async def add_sort():
                 "salary_desc" : "Убыванию ЗП",
                 "salary_asc" : "Возрастанию ЗП"
             }
+            i = 0
             for id_value, tg_int_value in map_of_sort.items():
-                new_sort = insert(Sort).values(id=id_value, tg_int=tg_int_value)
+                new_sort = insert(Sort).values(id=str(i), key=id_value, value=tg_int_value)
+                i += 1
                 await session.execute(new_sort)
 
         await session.commit()
@@ -212,73 +225,66 @@ async def get_city(tag: str):
         return city
 
 # интерфейс доступа к таблице Towns
-async def get_town(tag: str):
+async def get_town(tag: str, find_tag: str):
     async with new_session() as session:
-        result = await session.execute(select(Towns).filter_by(id=tag))
+        if find_tag == "id":
+            result = await session.execute(select(Towns).filter_by(id=tag))
+        elif find_tag == "key":
+            result = await session.execute(select(Towns).filter_by(key=tag))
+        else:
+            result = await session.execute(select(Towns).filter_by(value=tag))
         town = result.scalar_one_or_none()
 
         return town
 
 # интерфейс доступа к таблице Salary
-async def get_salary(tag: str):
+async def get_salary(tag: str, find_tag: str):
     async with new_session() as session:
-        result = await session.execute(select(Salary).filter_by(id=tag))
-        salary = result.scalar_one_or_none()
-
-        return salary
-
-# интерфейс доступа к таблице Salary со значение-ключ
-async def rev_get_salary(tag: str):
-    async with new_session() as session:
-        result = await session.execute(select(Salary).filter_by(tg_int=tag))
+        if find_tag == "id":
+            result = await session.execute(select(Salary).filter_by(id=tag))
+        elif find_tag == "key":
+            result = await session.execute(select(Salary).filter_by(key=tag))
+        else:
+            result = await session.execute(select(Salary).filter_by(value=tag))
         salary = result.scalar_one_or_none()
 
         return salary
 
 # интерфейс доступа к таблице Experience
-async def get_experience(tag: str):
+async def get_experience(tag: str, find_tag: str):
     async with new_session() as session:
-        result = await session.execute(select(Experience).filter_by(id=tag))
-        experience = result.scalar_one_or_none()
-
-        return experience
-
-# интерфейс доступа к таблице Experience со значение-ключ
-async def rev_get_experience(tag: str):
-    async with new_session() as session:
-        result = await session.execute(select(Experience).filter_by(tg_int=tag))
+        if find_tag == "id":
+            result = await session.execute(select(Experience).filter_by(id=tag))
+        elif find_tag == "key":
+            result = await session.execute(select(Experience).filter_by(key=tag))
+        else:
+            result = await session.execute(select(Experience).filter_by(value=tag))
         experience = result.scalar_one_or_none()
 
         return experience
 
 # интерфейс доступа к таблице Employment
-async def get_employment(tag: str):
+async def get_employment(tag: str, find_tag: str):
     async with new_session() as session:
-        result = await session.execute(select(Employment).filter_by(id=tag))
-        employment = result.scalar_one_or_none()  # Получаем один результат или None
-
-        return employment  # Возвращаем результат
-
-# интерфейс доступа к таблице Employment со значение-ключ
-async def rev_get_employment(tag: str):
-    async with new_session() as session:
-        result = await session.execute(select(Employment).filter_by(tg_int=tag))
+        if find_tag == "id":
+            result = await session.execute(select(Employment).filter_by(id=tag))
+        elif find_tag == "key":
+            result = await session.execute(select(Employment).filter_by(key=tag))
+        else:
+            result = await session.execute(select(Employment).filter_by(value=tag))
         employment = result.scalar_one_or_none()  # Получаем один результат или None
 
         return employment  # Возвращаем результат
 
 # интерфейс доступа к таблице Sort
-async def get_sort(tag: str):
+async def get_sort(tag: str, find_tag: str):
     async with new_session() as session:
-        result = await session.execute(select(Sort).filter_by(id=tag))
-        sort = result.scalar_one_or_none()
-
-        return sort
-
-# интерфейс доступа к таблице Sort со значение-ключ
-async def rev_get_sort(tag: str):
-    async with new_session() as session:
-        result = await session.execute(select(Sort).filter_by(tg_int=tag))
+        if find_tag == "id":
+            result = await session.execute(select(Sort).filter_by(id=tag))
+        elif find_tag == "key":
+            result = await session.execute(select(Sort).filter_by(key=tag))
+        else:
+            result = await session.execute(select(Sort).filter_by(value=tag))
         sort = result.scalar_one_or_none()
 
         return sort
@@ -292,22 +298,6 @@ async def get_user(user_id: int):
             user = result.scalar_one_or_none()
 
             await session.commit()
-
-            return user
-
-# функция для обновления пользователя
-async def update_user(user_id: int, dict : dict):
-
-    async with new_session() as session:
-        async with session.begin():
-            result = await session.execute(select(User).filter_by(id=user_id))
-            user = result.scalar_one_or_none()
-
-            for key, value in dict.items():
-                setattr(user, key, value)
-
-            #await session.refresh(user)
-            #await session.commit()
 
             return user
 
@@ -326,28 +316,46 @@ async def delete_user(user_id: int):
             else:
                 return False
 
-# SELECT *колонка* IN *таблица* 
-async def get_column(table_name : str, column_name : str) -> list:
+# функция для обновления пользователя
+async def update_user(user_id: int, user_dict: dict):
     async with new_session() as session:
         async with session.begin():
-            # Определим соот. переданного названия таблицы и её модели внутри БД
-            table_mapping = {
-                'salary' : Salary,
-                'experience' : Experience,
-                'towns' : Towns,
-                'cities' : Cities,
-                'employment' : Employment,
-                'sort' : Sort,
-            }
+            result = await session.execute(select(User).filter_by(id=user_id))
+            user = result.scalar_one_or_none()
 
-            model = table_mapping.get(table_name)
+            for key, value in user_dict.items():
+                if key == 'history_req' or key == 'history_ans':
+                    ar = user.history_req.copy()
+                    for el in value:
+                        ar.append(el)
+                    setattr(user, key, ar)
+                else:
+                    setattr(user, key, value)
 
-            # Запрос в таблицу model по column_name
-            query = select(getattr(model, column_name))
-    
-            result = await session.execute(query)
-            
-            return [row[0] for row in result.scalars().all()]
+            await session.commit()
+
+# SELECT *колонка* IN *таблица*
+async def get_column(table_name: str, column_name: str) -> list:
+    async with new_session() as session:
+        # Определим соот. переданного названия таблицы и её модели внутри БД
+        table_mapping = {
+            'users': User,
+            'salary': Salary,
+            'experience': Experience,
+            'towns': Towns,
+            'cities': Cities,
+            'employment': Employment,
+            'sort': Sort,
+        }
+
+        model = table_mapping.get(table_name)
+
+        # Запрос в таблицу model по column_name
+        query = select(getattr(model, column_name))
+
+        result = await session.execute(query)
+
+        return [row for row in result.scalars().all()]
 
 async def start_database() -> None:
     await delete_tables()

@@ -5,10 +5,7 @@ from aiogram.fsm.state import StatesGroup,State
 from aiogram.fsm.context import FSMContext
 import json
 
-from xyzservices.providers import data_path
-
 import telegram_bot.keyboards as kb
-from database.dynamic_db import update_user
 from telegram_bot.user_requests import make_req
 import database.dynamic_db as ddb
 
@@ -54,7 +51,6 @@ async def cmd_town(message: Message, state: FSMContext) -> None:
 @router.message(Request.town)
 async def cmd_salary(message: Message, state: FSMContext) -> None:
     # проверка на нахождение введенного города в списке HH
-    print(message.text, await ddb.get_column("cities", "city_name"))
     if message.text not in (await ddb.get_column("cities", "city_name")):
         await message.answer("К сожалению, пока этот город недоступен\nНапишите, пожалуйста, другой")
     else:
@@ -127,8 +123,8 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
     await state.clear() # очистка состояния
     await message.answer("Поиск•••")
     data_from_parser = await make_req(data, 0) # запрос в парсер
-    vac_now = 1 # текущая вакансия
     vac_total = len(data_from_parser) # всего вакансий на странице
+    vac_now = min(vac_total, 1) # текущая вакансия
     txt = ""
     for item in data_from_parser:
         txt += json.dumps(item, ensure_ascii=False) + "#"
@@ -180,22 +176,21 @@ async def cmd_more(callback: CallbackQuery):
     if data.vac_total < 50:
         await callback.answer(text="Вакансий больше нет", show_alert=True)
     else:
-        await ddb.update_user(callback.from_user.id, {"page" : data.page + 1})
         request_to_parser = json.loads(data.history_req[-1])
         data_from_parser = await make_req(request_to_parser, data.page + 1)  # запрос в парсер
-        vac_now = 1
         vac_total = len(data_from_parser)
+        vac_now = min(vac_total, 1)
         txt = ""
         for item in data_from_parser:
             txt += json.dumps(item, ensure_ascii=False) + "#"
-        await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page,
+        await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page + 1,
                                                                "history_req" : [json.dumps(request_to_parser, ensure_ascii=False)],
                                                                "history_ans" : [txt]})
         if vac_total == 0:
-            text = "Подходящих вакансий не найдено"
-            await callback.message.answer(text,
-                                 reply_markup=kb.start_button,
-                                 resize_keyboard=True)
+            await callback.message.edit_reply_markup(reply_markup=await kb.inline_pages_builder_chosen(callback.from_user.id))
+            await callback.message.answer(text="Подходящих вакансий не найдено",
+                                          reply_markup=kb.start_button,
+                                          resize_keyboard=True)
         else:
             text = (f"✔ {data_from_parser[0]["title"]}\n✔ {data_from_parser[0]["employer"]}\n"
                     f"✔ {data_from_parser[0]["salary_info"]}\n✔ {data_from_parser[0]["url"]}")

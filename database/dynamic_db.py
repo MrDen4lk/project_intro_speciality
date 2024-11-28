@@ -24,7 +24,6 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False) # имя пользователя
     vac_now = Column(Integer, nullable=False, default=0) # номер показываемой вакансии из списка
     vac_total = Column(Integer, nullable=False, default=0) # всего доступно вакансий по запросу
     page = Column(Integer, nullable=False, default=0) # текущая страница поиска в парсере
@@ -90,7 +89,7 @@ async def delete_tables():
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
 # добавляем пользователя в таблицу
-async def add_user(user_id : int, name : str, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list):
+async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list):
 
     async with new_session() as session:
         async with session.begin():
@@ -99,7 +98,6 @@ async def add_user(user_id : int, name : str, vac_now : int, vac_total : int, pa
             if not user:
                 new_user = insert(User).values(
                     id=user_id,
-                    name=name,
                     vac_now=vac_now,
                     vac_total=vac_total,
                     page=page,

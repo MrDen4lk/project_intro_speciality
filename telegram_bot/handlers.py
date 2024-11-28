@@ -26,16 +26,16 @@ class Request(StatesGroup):
 @router.message(CommandStart())
 async def cmd_start(message: Message) -> None:
     # добавление пользователя в БД
-    await ddb.add_user(user_id=message.from_user.id, name=message.from_user.username,
+    await ddb.add_user(user_id=message.from_user.id,
                        vac_now=0, vac_total=0, page=0, history_req=[], history_ans=[])
-    await message.answer(f"Привет, @{message.from_user.username}!\nЯ помогу тебе найти работу мечты",
+    await message.answer(f"Привет!\nЯ помогу тебе найти работу мечты",
                          reply_markup=kb.start_button,
                          resize_keyboard=True)
 
 # обработчик /help
 @router.message(Command(commands=["help"]))
 async def cmd_help(message: Message) -> None:
-    await message.answer(f"Привет, @{message.from_user.username}!\nНапиши /start чтобы пользоваться!")
+    await message.answer(f"Привет!\nНапиши /start чтобы пользоваться!")
 
 # Обработка команды начала поиска
 @router.message(F.text == "Искать🔎")

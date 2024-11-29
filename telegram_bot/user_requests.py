@@ -1,5 +1,4 @@
 from parser.main import Parser
-
 import database.dynamic_db as ddb
 
 async def make_req(data: dict, page: int) -> list:

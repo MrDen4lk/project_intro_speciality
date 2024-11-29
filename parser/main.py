@@ -4,6 +4,7 @@ import requests
 import aiohttp
 import logging
 from dotenv import load_dotenv
+#proverka
 
 # получение данных из dotenv
 load_dotenv()

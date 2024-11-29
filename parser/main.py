@@ -1,8 +1,11 @@
 import asyncio
 import os
+import time
+
 import requests
 import aiohttp
 import logging
+import json
 from dotenv import load_dotenv
 #proverka
 
@@ -11,7 +14,7 @@ load_dotenv()
 
 class Parser():
 
-    def __init__(self, params):
+    def __init__(self, params, is_static):
         # Токен обновлять раз в две недели
         self.hh_api_token = os.getenv("HH_TOKEN")
         self.url = os.getenv("HH_URL")
@@ -21,6 +24,37 @@ class Parser():
             'Accept': 'application/json'
         }
         self.base_params = params
+        self.is_static = is_static
+        self.per_page = params['per_page']
+
+    def make_params(self):
+        text = 'text'
+        experience = 'experience'
+        only_with_salary = 'only_with_salary'
+        employment = 'employment'
+        sort = 'sort'
+
+        if self.base_params['area'] == False:
+            self.base_params['area'] = 113
+        if self.base_params['text'] == False:
+            text = 'NONE_text'
+        if self.base_params['text'] == False:
+            text = 'NONE_text'
+        if self.base_params['text'] == False:
+            text = 'NONE_text'
+        if self.base_params['text'] == False:
+            text = 'NONE_text'
+
+        new_params = {  # например
+            'area': self.base_params['area'],
+            text : self.base_params['text'],
+            'per_page': self.base_params['per_page'],
+            only_with_salary: self.base_params['only_with_salary'],
+            experience: self.base_params['experience'],
+            employment: self.base_params['employment'],
+            sort: self.base_params['sort'],
+        }
+
 
     # Получение json со страницы
     async def fetch_vacancies(self, session, url, params):
@@ -31,15 +65,15 @@ class Parser():
     #
     async def fetch_all_vacancies(self, page_num):
         async with aiohttp.ClientSession() as session: # <- постоянное соединение с сервером
+            total_vacancies = 0
             tasks = [] # <- получение json по страницам
             paramet = self.base_params.copy()
             paramet['page'] = page_num
-            tasks.append(Parser.fetch_vacancies(self, session, self.url, paramet))
+            data = await (Parser.fetch_vacancies(self, session, self.url, paramet))
             all_vacancies = []
 
             try:
-                responses = await asyncio.gather(*tasks)
-                for data in responses:
+                    total_vacancies = data.get('found', 0)
                     all_vacancies.extend(data.get('items', []))
 
             except aiohttp.ClientResponseError as http_err:
@@ -47,7 +81,8 @@ class Parser():
             except Exception as err:
                 print(f"Произошла ошибка: {err}")
 
-            return all_vacancies
+            return all_vacancies, total_vacancies
+
 
     def display_vacancies(self, vacancies): # Просто для просмотра
         for vacancy in vacancies:
@@ -81,22 +116,39 @@ class Parser():
         # !!! если bad request 400, то поставь time.sleep(~0.1))
         vacancies = await Parser.fetch_all_vacancies(self, page_number)
         #Parser.display_vacancies(self, vacancies)
-        return vacancies
+        if self.is_static:
+            static_vacancies = []
+            static_vacancies.extend(vacancies[0])
+            total_vacancies = vacancies[1]
+            if total_vacancies > 2000:
+                total_vacancies = 2000
+            for page_number_iterator in range(1, total_vacancies // self.per_page):
+                vac = await Parser.fetch_all_vacancies(self, page_number_iterator)
+                static_vacancies.extend(vac[0])
+            return static_vacancies
+        else:
+            return vacancies
 
 if __name__ == '__main__':
     #1
     # params передаётся парсеру
+    experience = 'experience'
+    only_with_salary = 'only_with_salary'
+    employment = 'employment'
+    sort = 'sort'
+
     params = { # например
             'area': 1,
-            'text': "ML engineer",
+            'text': 'Водитель',
             'per_page': 50,
-            'only_with_salary': "True",
-            'experience': "between3And6",
-            'employment': "full",
-            'sort': "publication_time"
+            only_with_salary: "False",
+            experience : None,
+            employment: "full",
+            sort: "relevance"
         }
-    k = Parser(params)
-    asyncio.run(k.main(0))
+    k = Parser(params, True)
+    #print(asyncio.run(k.main(0)))
+    print(len(asyncio.run(k.main(0))))
 
 #1
 # area (Москва - 1, Санкт-Петербург - 2 и тд) https://github.com/hhru/api/blob/master/docs/areas.md

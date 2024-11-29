@@ -1,9 +1,10 @@
 import asyncio
 import json
 from parser.main import Parser
-import database.db as db
 
-async def make_req(data: dict) -> list:
+import database.dynamic_db as ddb
+
+async def make_req(data: dict, page: int) -> list:
     # формирование данных для запроса
     req = {
         "area" : db.update_for_req_town[data["town"]],

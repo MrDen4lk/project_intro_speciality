@@ -23,37 +23,23 @@ class Parser():
             'User-Agent': 'Python/requests',
             'Accept': 'application/json'
         }
-        self.base_params = params
+        self.base_params = Parser.make_params(self, params)
         self.is_static = is_static
         self.per_page = params['per_page']
 
-    def make_params(self):
-        text = 'text'
-        experience = 'experience'
-        only_with_salary = 'only_with_salary'
-        employment = 'employment'
-        sort = 'sort'
-
-        if self.base_params['area'] == False:
-            self.base_params['area'] = 113
-        if self.base_params['text'] == False:
-            text = 'NONE_text'
-        if self.base_params['text'] == False:
-            text = 'NONE_text'
-        if self.base_params['text'] == False:
-            text = 'NONE_text'
-        if self.base_params['text'] == False:
-            text = 'NONE_text'
-
-        new_params = {  # например
-            'area': self.base_params['area'],
-            text : self.base_params['text'],
-            'per_page': self.base_params['per_page'],
-            only_with_salary: self.base_params['only_with_salary'],
-            experience: self.base_params['experience'],
-            employment: self.base_params['employment'],
-            sort: self.base_params['sort'],
-        }
+    def make_params(self, base_params):
+        new_params= {}
+        if base_params['text'] != "None":
+            new_params['text'] = base_params['text']
+        if base_params['experience'] != "None":
+            new_params['experience'] = base_params['experience']
+        if base_params['only_with_salary'] == "None":
+            new_params['only_with_salary'] = "False"
+        if base_params['employment'] != "None":
+            new_params['employment'] = base_params['employment']
+        if base_params['sort'] != "None":
+            new_params['sort'] = base_params['sort']
+        return new_params
 
 
     # Получение json со страницы
@@ -122,9 +108,11 @@ class Parser():
             total_vacancies = vacancies[1]
             if total_vacancies > 2000:
                 total_vacancies = 2000
-            for page_number_iterator in range(1, total_vacancies // self.per_page):
+            page_number_iterator = 1
+            while len(static_vacancies) < total_vacancies:
                 vac = await Parser.fetch_all_vacancies(self, page_number_iterator)
                 static_vacancies.extend(vac[0])
+                page_number_iterator += 1
             return static_vacancies
         else:
             return vacancies
@@ -132,19 +120,15 @@ class Parser():
 if __name__ == '__main__':
     #1
     # params передаётся парсеру
-    experience = 'experience'
-    only_with_salary = 'only_with_salary'
-    employment = 'employment'
-    sort = 'sort'
 
     params = { # например
-            'area': 1,
+            'area': 113,
             'text': 'Водитель',
             'per_page': 50,
-            only_with_salary: "False",
-            experience : None,
-            employment: "full",
-            sort: "relevance"
+            'only_with_salary': "None",
+            'experience' : "None",
+            'employment': "None",
+            'sort': "None"
         }
     k = Parser(params, True)
     #print(asyncio.run(k.main(0)))

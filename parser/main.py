@@ -7,6 +7,7 @@ import aiohttp
 import logging
 import json
 from dotenv import load_dotenv
+from make_csv import data
 #proverka
 
 # получение данных из dotenv
@@ -113,7 +114,7 @@ class Parser():
                 vac = await Parser.fetch_all_vacancies(self, page_number_iterator)
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1
-            return static_vacancies
+            return data(static_vacancies)
         else:
             return vacancies
 

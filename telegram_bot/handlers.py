@@ -14,13 +14,13 @@ router = Router()
 
 # класс запроса пользователя
 class Request(StatesGroup):
+    search = State()
     town = State()
     salary = State()
     experience = State()
     employment = State()
     sort = State()
     text = State()
-
 
 # обработчик /start
 @router.message(CommandStart())
@@ -40,9 +40,21 @@ async def cmd_help(message: Message) -> None:
 # Обработка команды начала поиска
 @router.message(F.text == "Искать🔎")
 async def cmd_town(message: Message, state: FSMContext) -> None:
+    await state.update_data(search=False)
     await state.set_state(Request.town) # установка состояния для town
     await ddb.update_user(message.from_user.id, {"page" : 0})
     await message.answer("Начнем поиск!",
+                         reply_markup=ReplyKeyboardRemove())
+    await message.answer("Укажите город, в которым ищите работу:",
+                         reply_markup=await kb.inline_town_button())
+
+# Обработка команды начала поиска
+@router.message(F.text == "Статистика по вакансиям")
+async def cmd_town(message: Message, state: FSMContext) -> None:
+    await state.update_data(search=True)
+    await state.set_state(Request.town) # установка состояния для town
+    await ddb.update_user(message.from_user.id, {"page" : 0})
+    await message.answer("Начнем cбор статистики!",
                          reply_markup=ReplyKeyboardRemove())
     await message.answer("Укажите город, в которым ищите работу:",
                          reply_markup=await kb.inline_town_button())
@@ -60,7 +72,7 @@ async def cmd_salary(message: Message, state: FSMContext) -> None:
                              reply_markup=await kb.inline_salary_button())
 
 # Обработка выбора города кроме другого и запрос на salary
-@router.callback_query(F.data.in_(["Moscow", "Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny"]))
+@router.callback_query(F.data.in_(["Moscow", "Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny", "any_town"]))
 async def cmd_town_button(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(town=(await ddb.get_town(callback.data, "key")).value) # запись данных в поле town
     await state.set_state(Request.salary) # установка состояния для salary
@@ -88,7 +100,7 @@ async def cmd_salary_button(callback: CallbackQuery, state: FSMContext) -> None:
                                   reply_markup=await kb.inline_experience_button())
 
 # Обработка выбора experience и запрос на employment
-@router.callback_query(F.data.in_(["noExperience", "between1And3", "between3And6", "moreThan6"]))
+@router.callback_query(F.data.in_(["noExperience", "between1And3", "between3And6", "moreThan6", "any_exp"]))
 async def cmd_exp_button(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(experience=(await ddb.get_experience(callback.data, "key")).value) # запись данных в поле experience
     await state.set_state(Request.employment) # установка состояния для employment
@@ -98,7 +110,7 @@ async def cmd_exp_button(callback: CallbackQuery, state: FSMContext) -> None:
                                   reply_markup=await kb.inline_employment_button())
 
 # Обработка выбора employment и запрос на sort
-@router.callback_query(F.data.in_(["full", "part", "project", "probation"]))
+@router.callback_query(F.data.in_(["full", "part", "project", "probation", "any_empl"]))
 async def cmd_empl_button(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(employment=(await ddb.get_employment(callback.data, "key")).value) # запись данных в поле employment
     await state.set_state(Request.sort) # установка состояния для sort
@@ -107,7 +119,7 @@ async def cmd_empl_button(callback: CallbackQuery, state: FSMContext) -> None:
                                   reply_markup=await kb.inline_sort_button())
 
 # # Обработка выбора sort и запрос на text
-@router.callback_query(F.data.in_(["relevance", "publication_time", "salary_desc", "salary_asc"]))
+@router.callback_query(F.data.in_(["relevance", "publication_time", "salary_desc", "salary_asc", "any_sort"]))
 async def cmd_sort_button(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(sort=(await ddb.get_sort(callback.data, "key")).value) # запись данных в поле sort
     await state.set_state(Request.text) # установка состояния для text
@@ -125,7 +137,7 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
     data_from_parser = await make_req(data, 0) # запрос в парсер
     vac_total = len(data_from_parser) # всего вакансий на странице
     vac_now = min(vac_total, 1) # текущая вакансия
-    txt = ""
+    txt = str()
     for item in data_from_parser:
         txt += json.dumps(item, ensure_ascii=False) + "#"
     await ddb.update_user(user_id, {"vac_now" : vac_now, "vac_total" : vac_total,
@@ -137,8 +149,8 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
                              reply_markup=kb.start_button,
                              resize_keyboard=True)
     else:
-        text = (f"✔ {data_from_parser[0]["title"]}\n✔ {data_from_parser[0]["employer"]}\n"
-                f"✔ {data_from_parser[0]["salary_info"]}\n✔ {data_from_parser[0]["url"]}")
+        text = (f"✔ {data_from_parser[0]['title']}\n✔ {data_from_parser[0]['employer']}\n"
+                f"✔ {data_from_parser[0]['salary_info']}\n✔ {data_from_parser[0]['url']}")
 
         await message.answer(text,
                              reply_markup=await kb.inline_pages_builder(user_id))
@@ -149,10 +161,13 @@ async def cmd_next(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id  # получение ID пользователя
     data = await ddb.get_user(user_id) # получение данных из БД
     await ddb.update_user(user_id, {"vac_now" : (data.vac_now + 1)}) # запись данных в БД
-    text = (f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["title"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["employer"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["salary_info"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now])["url"]}")
+
+    data_for_text = json.loads(data.history_ans[-1].split("#")[data.vac_now])
+    text = (f"✔ {data_for_text['title']}\n"
+            f"✔ {data_for_text['employer']}\n"
+            f"✔ {data_for_text['salary_info']}\n"
+            f"✔ {data_for_text['url']}")
+
     await callback.message.edit_text(text,
                                      reply_markup=await kb.inline_pages_builder(user_id))
 
@@ -162,10 +177,12 @@ async def cmd_prev(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id # получение ID пользователя
     data = await ddb.get_user(user_id)  # получение данных из БД
     await ddb.update_user(user_id, {"vac_now" : (data.vac_now - 1)}) # запись данных в БД
-    text = (f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["title"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["employer"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["salary_info"]}\n"
-            f"✔ {json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])["url"]}")
+
+    data_for_text = json.loads(data.history_ans[-1].split("#")[data.vac_now - 2])
+    text = (f"✔ {data_for_text['title']}\n"
+            f"✔ {data_for_text['employer']}\n"
+            f"✔ {data_for_text['salary_info']}\n"
+            f"✔ {data_for_text['url']}")
     await callback.message.edit_text(text,
                                      reply_markup=await kb.inline_pages_builder(user_id))
 
@@ -180,7 +197,7 @@ async def cmd_more(callback: CallbackQuery):
         data_from_parser = await make_req(request_to_parser, data.page + 1)  # запрос в парсер
         vac_total = len(data_from_parser)
         vac_now = min(vac_total, 1)
-        txt = ""
+        txt = str()
         for item in data_from_parser:
             txt += json.dumps(item, ensure_ascii=False) + "#"
         await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page + 1,
@@ -192,8 +209,8 @@ async def cmd_more(callback: CallbackQuery):
                                           reply_markup=kb.start_button,
                                           resize_keyboard=True)
         else:
-            text = (f"✔ {data_from_parser[0]["title"]}\n✔ {data_from_parser[0]["employer"]}\n"
-                    f"✔ {data_from_parser[0]["salary_info"]}\n✔ {data_from_parser[0]["url"]}")
+            text = (f"✔ {data_from_parser[0]['title']}\n✔ {data_from_parser[0]['employer']}\n"
+                    f"✔ {data_from_parser[0]['salary_info']}\n✔ {data_from_parser[0]['url']}")
 
             await callback.message.edit_text(text,
                                              reply_markup=await kb.inline_pages_builder(callback.from_user.id))

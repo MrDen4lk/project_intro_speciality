@@ -1,3 +1,4 @@
+import asyncio
 from parser.main import Parser
 import database.dynamic_db as ddb
 
@@ -15,7 +16,7 @@ async def make_req(data: dict, page: int) -> list:
 
     # отправка запроса и получение результата
     answer = Parser(req)
-    back_return = []
+    back_return = list()
 
     # форматирование полученных данных
     for req_answer in await answer.main(page):

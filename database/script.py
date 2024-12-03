@@ -35,6 +35,7 @@ def get_cities() -> json:
         return {}
 
 if __name__ == "__main__":
-    cities_dict = get_cities()
-    with open("inp.txt", "w") as inp:
-        inp.write(json.dumps(cities_dict, ensure_ascii=False, indent=4))
+    #cities_dict = get_cities()
+    #with open("inp.txt", "w") as inp:
+    #    inp.write(json.dumps(cities_dict, ensure_ascii=False, indent=4))
+    pass

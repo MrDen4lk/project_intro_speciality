@@ -6,6 +6,7 @@ import requests
 import aiohttp
 import logging
 import json
+import pandas as pd
 from dotenv import load_dotenv
 from make_csv import data
 #proverka
@@ -70,31 +71,6 @@ class Parser():
 
             return all_vacancies, total_vacancies
 
-
-    def display_vacancies(self, vacancies): # Просто для просмотра
-        for vacancy in vacancies:
-            title = vacancy.get('name')
-            employer = vacancy.get('employer', {}).get('name')
-            salary = vacancy.get('salary')
-            url_vacancy = vacancy.get('alternate_url')
-            if salary:
-                salary_from = salary.get('from')
-                salary_to = salary.get('to')
-                currency = salary.get('currency')
-                if salary_from and salary_to:
-                    salary_info = f"{salary_from} - {salary_to} {currency}"
-                elif salary_to and not (salary_from):
-                    salary_info = f"До {salary_to} {currency}"
-                elif salary_from and not (salary_to):
-                    salary_info = f"От {salary_from} {currency}"
-            else:
-                salary_info = "Не указана"
-
-            print(f"Название: {title}")
-            print(f"Компания: {employer}")
-            print(f"Зарплата: {salary_info}")
-            print(f"Ссылка: {url_vacancy}\n")
-
     async def main(self, page_number): # <- возвращает json с вакансиями
         # page_number - номер страницы которую нужно обработать (индексация с 0)
         # Если указать per_page = 100 page = 1, то необязательно на одной странице будет 100 вакансий
@@ -133,7 +109,7 @@ if __name__ == '__main__':
         }
     k = Parser(params, True)
     #print(asyncio.run(k.main(0)))
-    print(len(asyncio.run(k.main(0))))
+    print(asyncio.run(k.main(0)))
 
 #1
 # area (Москва - 1, Санкт-Петербург - 2 и тд) https://github.com/hhru/api/blob/master/docs/areas.md

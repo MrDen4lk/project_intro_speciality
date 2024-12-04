@@ -3,17 +3,31 @@ from dask.dataframe import DataFrame
 
 
 def data(vac_list):
-    df = pd.DataFrame(columns=['text', 'employer', 'salary_from', 'salary_to', 'city', 'experience', 'employment'], index=len(vac_list))
+    name_list = [0] * len(vac_list)
+    employer_list = [0] * len(vac_list)
+    employment_list = [0] * len(vac_list)
+    city_list = [0] * len(vac_list)
+    experience_list = [0] * len(vac_list)
+    salary_from_list = [0] * len(vac_list)
+    salary_to_list = [0] * len(vac_list)
     i = 0
     for vac in vac_list:
         salary = vac.get('salary')
-        salary_from = vac.get('from')
-        salary_to = salary.get('to')
-        df.loc[i, 'text'] = vac['text']
-        df.loc[i, 'employer'] = vac['employer']
-        df.loc[i, 'employment'] = vac['employment']
-        df.loc[i, 'experience'] = vac['experience']
-        df.loc[i, 'city'] = vac['city']
-        df.loc[i, 'salary_from'] = salary_from
-        df.loc[i, 'salary_to'] = salary_to
+        salary_from = 'None'
+        salary_to = 'None'
+        if salary:
+            salary_from = salary.get('from')
+            salary_to = salary.get('to')
+        name_list[i] = (vac.get("name"))
+        employer_list[i] = (vac.get('employer', {}).get('name'))
+        employment_list[i] = (vac.get("employment", {}).get("name"))
+        experience_list[i] = (vac.get("experience", {}).get("name"))
+        city_list[i] = (vac.get("area", {}).get("name"))
+        salary_from_list[i] = salary_from
+        salary_to_list[i] = salary_to
+        i += 1
+    df = pd.DataFrame({"Профессия": name_list, "Компания": employer_list,
+                       "Занятость": employment_list, "Город": city_list,
+                       "Опыт": experience_list, "зп_от": salary_from,
+                       "зп_до": salary_to})
     return df.to_csv(index=False)

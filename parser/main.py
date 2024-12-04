@@ -32,8 +32,6 @@ class Parser():
             new_params['text'] = base_params['text']
         if base_params['experience'] != None:
             new_params['experience'] = base_params['experience']
-        if base_params['only_with_salary'] == None:
-            new_params['only_with_salary'] = "False"
         if base_params['employment'] != None:
             new_params['employment'] = base_params['employment']
         if base_params['sort'] != None:
@@ -94,7 +92,6 @@ if __name__ == '__main__':
             'area': 113,
             'text': 'Водитель',
             'per_page': 50,
-            'only_with_salary': None,
             'experience' : None,
             'employment': None,
             'sort': None

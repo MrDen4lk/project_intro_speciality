@@ -1,8 +1,11 @@
+import csv
+
 import pandas as pd
 from dask.dataframe import DataFrame
 
 
-def data(vac_list):
+def data(vac_list : list[dict]) -> csv:
+    #Создаём lists для хранения значений и дальнейшей передачи их в csv
     name_list = [0] * len(vac_list)
     employer_list = [0] * len(vac_list)
     employment_list = [0] * len(vac_list)
@@ -11,6 +14,7 @@ def data(vac_list):
     salary_from_list = [0] * len(vac_list)
     salary_to_list = [0] * len(vac_list)
     i = 0
+    #Добавляем признаки в lists
     for vac in vac_list:
         salary = vac.get('salary')
         salary_from = 'None'
@@ -26,8 +30,10 @@ def data(vac_list):
         salary_from_list[i] = salary_from
         salary_to_list[i] = salary_to
         i += 1
+    #Создаём dataframe
     df = pd.DataFrame({"Профессия": name_list, "Компания": employer_list,
                        "Занятость": employment_list, "Город": city_list,
                        "Опыт": experience_list, "зп_от": salary_from,
                        "зп_до": salary_to})
+    #Отправляем csv
     return df.to_csv(index=False)

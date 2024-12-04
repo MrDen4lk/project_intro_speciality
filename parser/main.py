@@ -28,15 +28,15 @@ class Parser():
 
     def make_params(self, base_params : dict) -> dict: #работа с None
         new_params= {}
-        if base_params['text'] != "None":
+        if base_params['text'] != None:
             new_params['text'] = base_params['text']
-        if base_params['experience'] != "None":
+        if base_params['experience'] != None:
             new_params['experience'] = base_params['experience']
-        if base_params['only_with_salary'] == "None":
+        if base_params['only_with_salary'] == None:
             new_params['only_with_salary'] = "False"
-        if base_params['employment'] != "None":
+        if base_params['employment'] != None:
             new_params['employment'] = base_params['employment']
-        if base_params['sort'] != "None":
+        if base_params['sort'] != None:
             new_params['sort'] = base_params['sort']
         return new_params
 
@@ -94,10 +94,11 @@ if __name__ == '__main__':
             'area': 113,
             'text': 'Водитель',
             'per_page': 50,
-            'only_with_salary': "None",
-            'experience' : "None",
-            'employment': "None",
-            'sort': "None"
+            'only_with_salary': None,
+            'experience' : None,
+            'employment': None,
+            'sort': None
         }
-    k = Parser(params, True)
+    k = Parser(params, False)
+    print(asyncio.run(k.main(0)))
     # True - статистика по вакансиям (csv), False - вакансии

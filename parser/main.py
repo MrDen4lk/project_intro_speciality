@@ -87,7 +87,7 @@ class Parser():
             #data превращает list[json] в csv
             return data(static_vacancies)
         else:
-            return vacancies
+            return vacancies[0]
 
 if __name__ == '__main__':
     params = { # например

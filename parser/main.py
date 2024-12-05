@@ -74,9 +74,12 @@ class Parser():
             static_vacancies.extend(vacancies[0])
             total_vacancies = vacancies[1]
             #максимум можно получить 2000 вакансий
-            if total_vacancies > 2000:
-                total_vacancies = 2000
-
+            if total_vacancies > 300:
+                total_vacancies = total_vacancies // 2
+            else:
+                total_vacancies = total_vacancies // 1.5
+            if total_vacancies > 1900:
+                total_vacancies = 1900
             #цикл по страницам
             page_number_iterator = 1
             while len(static_vacancies) < total_vacancies:
@@ -90,13 +93,13 @@ class Parser():
 
 if __name__ == '__main__':
     params = { # например
-            'area': 113,
-            'text': 'Водитель',
+            'area': 1,
+            "text" : "Дворник",
             'per_page': 50,
             'experience' : None,
             'employment': None,
             'sort': None
         }
-    k = Parser(params, False)
+    k = Parser(params, True)
     print(asyncio.run(k.main(0)))
     # True - статистика по вакансиям (csv), False - вакансии

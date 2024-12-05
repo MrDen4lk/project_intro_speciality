@@ -27,14 +27,15 @@ class Parser():
         self.per_page = params['per_page']
 
     def make_params(self, base_params : dict) -> dict: #работа с None
-        new_params= {}
-        if base_params['text'] != None:
+        new_params= dict()
+        new_params['area'] = base_params['area']
+        if base_params['text'] is not None:
             new_params['text'] = base_params['text']
-        if base_params['experience'] != None:
+        if base_params['experience'] is not None:
             new_params['experience'] = base_params['experience']
-        if base_params['employment'] != None:
+        if base_params['employment'] is not None:
             new_params['employment'] = base_params['employment']
-        if base_params['sort'] != None:
+        if base_params['sort'] is not None:
             new_params['sort'] = base_params['sort']
         return new_params
 

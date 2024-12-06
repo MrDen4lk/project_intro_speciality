@@ -1,7 +1,10 @@
 import csv
-
+import io
 import pandas as pd
 from dask.dataframe import DataFrame
+from aiogram import types
+
+
 
 
 def data(vac_list : list[dict]) -> csv:
@@ -36,4 +39,6 @@ def data(vac_list : list[dict]) -> csv:
                        "Опыт": experience_list, "зп_от": salary_from,
                        "зп_до": salary_to})
     #Отправляем csv
-    return df.to_csv(index=False)
+    csv_t = df.to_csv(index=False)
+    csv_file_input = types.FSInputFile(csv_t, filename="data.csv")
+    return csv_file_input

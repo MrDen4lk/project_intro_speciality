@@ -28,6 +28,7 @@ class User(Base):
     page = Column(Integer, nullable=False, default=0) # текущая страница поиска в парсере
     history_req = Column(ARRAY(String), default=list) # история запросов
     history_ans = Column(ARRAY(String), default=list) # история ответов
+    history_req_stat = Column(ARRAY(String), default=list) # история запросов статистики 
 
 # таблица citis
 class Cities(Base):
@@ -89,7 +90,7 @@ async def delete_tables():
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
 # добавляем пользователя в таблицу
-async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list) -> None:
+async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list, history_req_stat : list) -> None:
 
     async with new_session() as session:
         async with session.begin():
@@ -102,7 +103,8 @@ async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, hi
                     vac_total=vac_total,
                     page=page,
                     history_req=history_req,
-                    history_ans=history_ans
+                    history_ans=history_ans,
+                    history_req_stat=history_req_stat
                 )
                 await session.execute(new_user)
                 await session.commit()
@@ -321,7 +323,7 @@ async def update_user(user_id: int, user_dict: dict) -> None:
             user = result.scalar_one_or_none()
 
             for key, value in user_dict.items():
-                if key == 'history_req' or key == 'history_ans':
+                if key == 'history_req' or key == 'history_ans' or key == 'history_req_stat':
                     ar = user.history_req.copy()
                     for el in value:
                         ar.append(el)

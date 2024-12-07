@@ -79,12 +79,12 @@ class Sort(Base):
     value = Column(String, nullable=False)
 
 # создаем таблицу с исп. PostgreSQL
-async def create_tables():
+async def create_tables() -> None:
    async with engine.begin() as conn:
        await conn.run_sync(Base.metadata.create_all)
 
 # сносим таблицу с исп. PostgreSQL
-async def delete_tables():
+async def delete_tables() -> None:
    async with engine.begin() as conn:
        await conn.run_sync(Base.metadata.drop_all)
 
@@ -216,7 +216,7 @@ async def add_sort() -> None:
         await session.commit()
 
 # интерфейс доступа к таблице Cities
-async def get_city(tag: str) -> None:
+async def get_city(tag: str) -> Cities:
     async with new_session() as session:
         result = await session.execute(select(Cities).filter_by(city_name=tag))
         city = result.scalar_one_or_none()
@@ -224,7 +224,7 @@ async def get_city(tag: str) -> None:
         return city
 
 # интерфейс доступа к таблице Towns
-async def get_town(tag: str, find_tag: str) -> None:
+async def get_town(tag: str, find_tag: str) -> Towns:
     async with new_session() as session:
         if find_tag == "id":
             result = await session.execute(select(Towns).filter_by(id=int(tag)))
@@ -237,7 +237,7 @@ async def get_town(tag: str, find_tag: str) -> None:
         return town
 
 # интерфейс доступа к таблице Salary
-async def get_salary(tag: str, find_tag: str) -> None:
+async def get_salary(tag: str, find_tag: str) -> Salary:
     async with new_session() as session:
         if find_tag == "id":
             result = await session.execute(select(Salary).filter_by(id=int(tag)))
@@ -250,7 +250,7 @@ async def get_salary(tag: str, find_tag: str) -> None:
         return salary
 
 # интерфейс доступа к таблице Experience
-async def get_experience(tag: str, find_tag: str) -> None:
+async def get_experience(tag: str, find_tag: str) -> Experience:
     async with new_session() as session:
         if find_tag == "id":
             result = await session.execute(select(Experience).filter_by(id=int(tag)))
@@ -263,7 +263,7 @@ async def get_experience(tag: str, find_tag: str) -> None:
         return experience
 
 # интерфейс доступа к таблице Employment
-async def get_employment(tag: str, find_tag: str) -> None:
+async def get_employment(tag: str, find_tag: str) -> Employment:
     async with new_session() as session:
         if find_tag == "id":
             result = await session.execute(select(Employment).filter_by(id=int(tag)))
@@ -276,7 +276,7 @@ async def get_employment(tag: str, find_tag: str) -> None:
         return employment  # Возвращаем результат
 
 # интерфейс доступа к таблице Sort
-async def get_sort(tag: str, find_tag: str):
+async def get_sort(tag: str, find_tag: str) -> Sort:
     async with new_session() as session:
         if find_tag == "id":
             result = await session.execute(select(Sort).filter_by(id=int(tag)))
@@ -289,7 +289,7 @@ async def get_sort(tag: str, find_tag: str):
         return sort
 
 # функция для получения пользователя по айдишнику
-async def get_user(user_id: int):
+async def get_user(user_id: int) -> User:
 
     async with new_session() as session:
         async with session.begin():
@@ -301,7 +301,7 @@ async def get_user(user_id: int):
             return user
 
 # удаление пользователя (ну сдох чувак, удалился тг). Вообще не знаю надо ли нам это, но пусть будет
-async def delete_user(user_id: int):
+async def delete_user(user_id: int) -> bool:
 
     async with new_session() as session:
         async with session.begin():
@@ -366,13 +366,14 @@ async def start_database() -> None:
     await add_employment()
     await add_sort()
     # тащим все id
-    id_all = await get_column('sort','id')
+    id_all = await get_column('sort','key')
     # проверяем корректность работы get_tablename 
     get_sort_checker = await get_sort('1','id')
     get_towns_checker = await get_town('1','id')
     get_salary_checker = await get_salary('1','id')
     get_experience_checker = await get_experience('1','id')
     get_employment_checker = await get_employment('1','id')
+    print(id_all)
     print(get_sort_checker.key, get_towns_checker.key, get_salary_checker.key, get_experience_checker.key, get_employment_checker.key, sep='\n')
 if __name__ == "__main__":
     asyncio.run(start_database())

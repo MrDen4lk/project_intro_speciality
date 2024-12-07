@@ -8,9 +8,6 @@ client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 code = os.getenv("CODE") #Возможно нужно обновлять
 
-#https://hh.ru/oauth/authorize?response_type=code&client_id=S62DUEJDTBA2RQCB0V44O7SLN77Q6NFDHNM6D3TG8L3OL56KFRMJNAI1P3VEKL9J&redirect_uri=https://misis.ru/
-# строкой выше можно получить code, он будет в url МИСИСА (code=)
-
 oauth_end = os.getenv("OAUTH_END")
 
 t = os.getenv("LAST_TOKEN") # Последний токен пиши сюда

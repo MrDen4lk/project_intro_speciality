@@ -39,6 +39,8 @@ def data(vac_list : list[dict]) -> csv:
                        "Опыт": experience_list, "зп_от": salary_from,
                        "зп_до": salary_to})
     #Отправляем csv
-    csv_t = df.to_csv(index=False)
-    csv_file_input = types.FSInputFile(csv_t, filename="data.csv")
+    csv_buffer = io.BytesIO()
+    csv_t = df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)
+    csv_file_input = types.FSInputFile(csv_buffer, filename="data.csv")
     return csv_file_input

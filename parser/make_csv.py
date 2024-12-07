@@ -36,8 +36,8 @@ def data(vac_list : list[dict]) -> csv:
     #Создаём dataframe
     df = pd.DataFrame({"Профессия": name_list, "Компания": employer_list,
                        "Занятость": employment_list, "Город": city_list,
-                       "Опыт": experience_list, "зп_от": salary_from,
-                       "зп_до": salary_to})
+                       "Опыт": experience_list, "зп_от": salary_from_list,
+                       "зп_до": salary_to_list})
     #Отправляем csv
     csv_buffer = io.BytesIO()
     csv_t = df.to_csv(csv_buffer, index=False)

@@ -9,8 +9,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # создаем движок нашей БД, c данными из .env (echo - выводит всё)
-engine = create_async_engine(url="postgresql+asyncpg://postgres:postgres@localhost:5432/Users",
-                                    echo=True)
+path = "postgresql+asyncpg://" + os.getenv("DB_USER") + ":" + os.getenv("DB_PASS") + "@"\
+       + os.getenv("DB_HOST") + ":" + os.getenv("DB_PORT") + "/" + os.getenv("DB_NAME")
+engine = create_async_engine(url=path,
+                             echo=True)
+
 # создаем менеджер асинх сессий (сессия, хаха, сессия...)
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -136,7 +139,7 @@ async def add_towns() -> None:
                 "Yekaterinburg": "Екатеринбург",
                 "Kazan": "Казань",
                 "Nizhny": "Нижний Новгород",
-                "other": "Другой"
+                "any_town" : "None"
             }
             
             for id_value, tg_int_value in map_of_towns.items():
@@ -151,8 +154,8 @@ async def add_salary() -> None:
     async with new_session() as session:
         async with session.begin():
             map_of_salary = {
-                "True" : "Да",
-                "False" : "Нет"
+                "True": "Да",
+                "False": "Нет"
             }
             
             for id_value, tg_int_value in map_of_salary.items():
@@ -169,8 +172,9 @@ async def add_experience() -> None:
             map_of_experience = {
                 "noExperience": "Без опыта",
                 "between1And3": "От 1 до 3 лет",
-                "between3And6" : "От 3 до 6 лет",
-                "moreThan6" : "Больше 6 лет",
+                "between3And6": "От 3 до 6 лет",
+                "moreThan6": "Больше 6 лет",
+                "any_exp": "None"
                 }
             
             for id_value, tg_int_value in map_of_experience.items():
@@ -187,8 +191,9 @@ async def add_employment() -> None:
             map_of_employment = {
                 "full": "Полный",
                 "part": "Неполный",
-                "project" : "Проектный",
-                "probation" : "Испытательный срок",
+                "project": "Проектный",
+                "probation": "Испытательный срок",
+                "any_empl": "None"
             }
             
             for id_value, tg_int_value in map_of_employment.items():
@@ -203,10 +208,11 @@ async def add_sort() -> None:
     async with new_session() as session:
         async with session.begin():
             map_of_sort = {
-                "relevance" : "Релевантности",
-                "publication_time" : "Свежести",
-                "salary_desc" : "Убыванию ЗП",
-                "salary_asc" : "Возрастанию ЗП"
+                "relevance": "Релевантности",
+                "publication_time": "Свежести",
+                "salary_desc": "Убыванию ЗП",
+                "salary_asc": "Возрастанию ЗП",
+                "any_sort" : "None"
             }
 
             for id_value, tg_int_value in map_of_sort.items():

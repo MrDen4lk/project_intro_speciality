@@ -7,7 +7,7 @@ from aiogram import types
 
 
 
-def data(vac_list : list[dict]) -> csv:
+async def data(vac_list : list[dict]) -> csv:
     #Создаём lists для хранения значений и дальнейшей передачи их в csv
     name_list = [0] * len(vac_list)
     employer_list = [0] * len(vac_list)
@@ -39,8 +39,8 @@ def data(vac_list : list[dict]) -> csv:
                        "Опыт": experience_list, "зп_от": salary_from_list,
                        "зп_до": salary_to_list})
     #Отправляем csv
-    csv_buffer = io.BytesIO()
-    csv_t = df.to_csv(csv_buffer, index=False)
-    csv_buffer.seek(0)
-    csv_file_input = types.FSInputFile(csv_buffer, filename="data.csv")
-    return csv_file_input
+    csv_file_path = "data.csv"
+    df.to_csv(csv_file_path, index=False)
+    with open(csv_file_path, 'rb') as file:
+        await bot.send() #здесь допиши что и куда
+    os.remove(csv_file_path)

@@ -1,23 +1,20 @@
+import database.dynamic_db as ddb
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from docutils.nodes import Inline
-from holoviews.examples.gallery.apps.bokeh.streaming_psutil import callback
-
-import database.dynamic_db as ddb
 
 # клавиатура для кнопки поиска в клавиатуре
 start_button = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text="Искать🔎")],
-    [KeyboardButton(text="Статистика по вакансиям")]
+    [KeyboardButton(text="Статистика по вакансиям📊")]
 ])
 
 # клавиатура для выбора города в сообщениях
 async def inline_town_button() -> InlineKeyboardMarkup:
     town_button = InlineKeyboardBuilder() # создание конструктора для кнопки town
     for i in range(0, 6, 2):
-        data_1 = await ddb.get_town(str(i), "id")
-        data_2 = await ddb.get_town(str(i + 1), "id")
+        data_1 = await ddb.get_town(str(i + 1), "id")
+        data_2 = await ddb.get_town(str(i + 2), "id")
         town_button.row(
             InlineKeyboardButton(text=data_1.value, callback_data=data_1.key),
             InlineKeyboardButton(text=data_2.value, callback_data=data_2.key)
@@ -33,8 +30,8 @@ async def inline_town_button() -> InlineKeyboardMarkup:
 async def inline_town_button_chosen(chosen: str) -> InlineKeyboardMarkup:
     town_button_chosen = InlineKeyboardBuilder() # создание конструктора для кнопки town_chosen
     for i in range(0, 6, 2):
-        data_1 = await ddb.get_town(str(i), "id")
-        data_2 = await ddb.get_town(str(i + 1), "id")
+        data_1 = await ddb.get_town(str(i + 1), "id")
+        data_2 = await ddb.get_town(str(i + 2), "id")
         town_button_chosen.row(
             InlineKeyboardButton(text=data_1.value + ("✅" if chosen == data_1.key else ""),
                                           callback_data="pressed"),
@@ -56,7 +53,7 @@ async def inline_town_button_chosen(chosen: str) -> InlineKeyboardMarkup:
 async def inline_salary_button() -> InlineKeyboardMarkup:
     salary_button = InlineKeyboardBuilder() # создание конструктора для кнопки salary
     for i in range(2):
-        data = await ddb.get_salary(str(i), "id")
+        data = await ddb.get_salary(str(i + 1), "id")
         salary_button.add(InlineKeyboardButton(text=data.value, callback_data=data.key))
     salary_button.add(InlineKeyboardButton(text="Завершить поиск", callback_data="salary_end"))
     return salary_button.adjust(2).as_markup()
@@ -65,7 +62,7 @@ async def inline_salary_button() -> InlineKeyboardMarkup:
 async def inline_salary_button_chosen(chosen: str) -> InlineKeyboardMarkup:
     salary_button_chosen = InlineKeyboardBuilder() # создание конструктора для кнопки salary_chosen
     for i in range(2):
-        data = await ddb.get_salary(str(i), "id")
+        data = await ddb.get_salary(str(i + 1), "id")
         salary_button_chosen.add(InlineKeyboardButton(text=data.value + ("✅" if data.key == chosen else ""), callback_data="pressed"))
     if chosen == "salary_end":
         salary_button_chosen.add(InlineKeyboardButton(text="Поиск завершен✅", callback_data="pressed"))
@@ -74,8 +71,8 @@ async def inline_salary_button_chosen(chosen: str) -> InlineKeyboardMarkup:
 async def inline_experience_button() -> InlineKeyboardMarkup:
     experience_button = InlineKeyboardBuilder() # создание конструктора для кнопки experience
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_experience(str(i), "id")
-        data_2 = await ddb.get_experience(str(i + 1), "id")
+        data_1 = await ddb.get_experience(str(i + 1), "id")
+        data_2 = await ddb.get_experience(str(i + 2), "id")
         experience_button.row(
             InlineKeyboardButton(text=data_1.value, callback_data=data_1.key),
             InlineKeyboardButton(text=data_2.value, callback_data=data_2.key)
@@ -88,8 +85,8 @@ async def inline_experience_button() -> InlineKeyboardMarkup:
 async def inline_experience_button_chosen(chosen: str) -> InlineKeyboardMarkup:
     experience_button_chosen = InlineKeyboardBuilder() # создание конструктора для кнопки experience_chosen
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_experience(str(i), "id")
-        data_2 = await ddb.get_experience(str(i + 1), "id")
+        data_1 = await ddb.get_experience(str(i + 1), "id")
+        data_2 = await ddb.get_experience(str(i + 2), "id")
         experience_button_chosen.row(
             InlineKeyboardButton(text=data_1.value + ("✅" if data_1.key == chosen else ""), callback_data="pressed"),
             InlineKeyboardButton(text=data_2.value + ("✅" if data_2.key == chosen else ""), callback_data="pressed")
@@ -103,8 +100,8 @@ async def inline_experience_button_chosen(chosen: str) -> InlineKeyboardMarkup:
 async def inline_employment_button() -> InlineKeyboardMarkup:
     employment_button = InlineKeyboardBuilder() # создание конструктора для кнопки employment
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_employment(str(i), "id")
-        data_2 = await ddb.get_employment(str(i + 1), "id")
+        data_1 = await ddb.get_employment(str(i + 1), "id")
+        data_2 = await ddb.get_employment(str(i + 2), "id")
         employment_button.row(
             InlineKeyboardButton(text=data_1.value, callback_data=data_1.key),
             InlineKeyboardButton(text=data_2.value, callback_data=data_2.key)
@@ -117,8 +114,8 @@ async def inline_employment_button() -> InlineKeyboardMarkup:
 async def inline_employment_button_chosen(chosen: str) -> InlineKeyboardMarkup:
     employment_button_chosen = InlineKeyboardBuilder() # создание конструктора для кнопки employment_chosen
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_employment(str(i), "id")
-        data_2 = await ddb.get_employment(str(i + 1), "id")
+        data_1 = await ddb.get_employment(str(i + 1), "id")
+        data_2 = await ddb.get_employment(str(i + 2), "id")
         employment_button_chosen.row(
             InlineKeyboardButton(text=data_1.value + ("✅" if chosen == data_1.key else ""), callback_data="pressed"),
             InlineKeyboardButton(text=data_2.value + ("✅" if chosen == data_2.key else ""), callback_data="pressed")
@@ -132,8 +129,8 @@ async def inline_employment_button_chosen(chosen: str) -> InlineKeyboardMarkup:
 async def inline_sort_button() -> InlineKeyboardMarkup:
     sort_button = InlineKeyboardBuilder() # создание конструктора для кнопки sort
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_sort(str(i), "id")
-        data_2 = await ddb.get_sort(str(i + 1), "id")
+        data_1 = await ddb.get_sort(str(i + 1), "id")
+        data_2 = await ddb.get_sort(str(i + 2), "id")
         sort_button.row(
             InlineKeyboardButton(text=data_1.value, callback_data=data_1.key),
             InlineKeyboardButton(text=data_2.value, callback_data=data_2.key)
@@ -146,8 +143,8 @@ async def inline_sort_button() -> InlineKeyboardMarkup:
 async def inline_sort_button_chosen(chosen: str) -> InlineKeyboardMarkup:
     sort_button_chosen = InlineKeyboardBuilder() # создание конструктора для кнопки sort_chosen
     for i in range(0, 4, 2):
-        data_1 = await ddb.get_employment(str(i), "id")
-        data_2 = await ddb.get_employment(str(i + 1), "id")
+        data_1 = await ddb.get_sort(str(i + 1), "id")
+        data_2 = await ddb.get_sort(str(i + 2), "id")
         sort_button_chosen.row(
             InlineKeyboardButton(text=data_1.value + ("✅" if chosen == data_1.key else ""), callback_data="pressed"),
             InlineKeyboardButton(text=data_2.value + ("✅" if chosen == data_2.key else ""), callback_data="pressed")
@@ -182,7 +179,6 @@ async def inline_pages_builder(user_id) -> InlineKeyboardMarkup:
         InlineKeyboardButton(text="=>", callback_data=("next" if (data.vac_now !=data.vac_total) else "pressed")))
     inline_pages.row(InlineKeyboardButton(text="Ещё", callback_data="morevac"))
     inline_pages.row(InlineKeyboardButton(text="Завершить поиск", callback_data="final_end"))
-
     return inline_pages.as_markup()
 
 # клавиатура для выбранной вакансии + ✅ у выбранного

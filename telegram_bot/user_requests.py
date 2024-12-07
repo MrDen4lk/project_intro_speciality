@@ -1,5 +1,6 @@
 from parser.main import Parser
 import database.dynamic_db as ddb
+
 import logging
 import csv
 

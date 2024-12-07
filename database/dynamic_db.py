@@ -1,10 +1,10 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer, String, JSON, ARRAY, select, insert
+from sqlalchemy import Column, Integer, String, ARRAY, select, insert
+from dotenv import load_dotenv
 import json
 import asyncio
 import os
-from dotenv import load_dotenv
 
 load_dotenv()
 

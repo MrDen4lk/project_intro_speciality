@@ -1,10 +1,7 @@
-import asyncio
 import csv
 import os
-import requests
 import aiohttp
 import json
-import pandas as pd
 from dotenv import load_dotenv
 from parser.make_csv import data
 

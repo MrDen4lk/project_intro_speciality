@@ -1,8 +1,7 @@
+from aiogram import types
 import csv
 import io
 import pandas as pd
-from dask.dataframe import DataFrame
-from aiogram import types
 
 def data(vac_list : list[dict]) -> csv:
     #Создаём lists для хранения значений и дальнейшей передачи их в csv

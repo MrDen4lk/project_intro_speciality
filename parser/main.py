@@ -87,7 +87,7 @@ class Parser():
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1
             #data превращает list[json] в csv
-            await data(static_vacancies)
+            data(static_vacancies)
         else:
             return vacancies[0]
 

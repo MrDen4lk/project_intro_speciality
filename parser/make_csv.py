@@ -1,13 +1,14 @@
 import csv
 import io
 import pandas as pd
+import os
 from dask.dataframe import DataFrame
 from aiogram import types
 
 
 
 
-async def data(vac_list : list[dict]) -> csv:
+def data(vac_list : list[dict]) -> csv:
     #Создаём lists для хранения значений и дальнейшей передачи их в csv
     name_list = [0] * len(vac_list)
     employer_list = [0] * len(vac_list)
@@ -42,5 +43,5 @@ async def data(vac_list : list[dict]) -> csv:
     csv_file_path = "data.csv"
     df.to_csv(csv_file_path, index=False)
     with open(csv_file_path, 'rb') as file:
-        await bot.send() #здесь допиши что и куда
+        bot.send() #здесь допиши что и куда
     os.remove(csv_file_path)

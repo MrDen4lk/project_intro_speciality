@@ -171,10 +171,10 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
         await message.answer("Идет сбор статистики, ожидайте•••",
                              reply_markup=kb.start_button,
                              resize_keyboard=True)
-        await message.answer_document(document=await make_req(data, 0))
+        await message.answer_document(document=await make_req(data, 0, message.chat.id))
     else:
         await message.answer("Поиск•••")
-        data_from_parser = await make_req(data, 0) # запрос в парсер
+        data_from_parser = await make_req(data, 0, message.chat.id) # запрос в парсер
         vac_total = len(data_from_parser) # всего вакансий на странице
         vac_now = min(vac_total, 1) # текущая вакансия
 
@@ -242,7 +242,7 @@ async def cmd_more(callback: CallbackQuery):
         await callback.answer(text="Вакансий больше нет", show_alert=True)
     else:
         request_to_parser = json.loads(data.history_req[-1])
-        data_from_parser = await make_req(request_to_parser, data.page + 1)  # запрос в парсер
+        data_from_parser = await make_req(request_to_parser, data.page + 1, callback.message.chat.id)  # запрос в парсер
         vac_total = len(data_from_parser)
         vac_now = min(vac_total, 1)
         txt = str()

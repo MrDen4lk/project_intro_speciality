@@ -1,9 +1,15 @@
-from aiogram import types
 import csv
 import io
+import os
 import pandas as pd
+from dask.dataframe import DataFrame
+from aiogram import types, Bot
+from dotenv import load_dotenv
+from aiogram.types import FSInputFile
 
-def data(vac_list : list[dict]) -> csv:
+load_dotenv()
+
+async def data(vac_list : list[dict], chat_id : int) -> None:
     #Создаём lists для хранения значений и дальнейшей передачи их в csv
     name_list = [0] * len(vac_list)
     employer_list = [0] * len(vac_list)
@@ -35,8 +41,9 @@ def data(vac_list : list[dict]) -> csv:
                        "Опыт": experience_list, "зп_от": salary_from_list,
                        "зп_до": salary_to_list})
     #Отправляем csv
-    csv_buffer = io.BytesIO()
-    csv_t = df.to_csv(csv_buffer, index=False)
-    csv_buffer.seek(0)
-    csv_file_input = types.FSInputFile(csv_buffer, filename="data.csv")
-    return csv_file_input
+    csv_file_path = "data.csv"
+    df.to_csv(csv_file_path, index=False)
+    inp_file = FSInputFile(csv_file_path)
+    async with Bot(token=os.getenv("TG_TOKEN")) as bot:
+        await bot.send_document(chat_id=chat_id, document=inp_file)
+        os.remove(csv_file_path)

@@ -5,7 +5,7 @@ import logging
 import csv
 
 # функция для обработки запросов пользователя на поиск вакансий и статистику
-async def make_req(data: dict, page: int) -> list or csv:
+async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
     logging.info(data) # логирование полученных данных от пользователя
 
     # обработка полученных данных
@@ -28,7 +28,7 @@ async def make_req(data: dict, page: int) -> list or csv:
     logging.info(req) # логирование данных запроса
 
     # отправка запроса и получение результата
-    answer = Parser(req, data["search"])
+    answer = Parser(req, data["search"], chat_id)
 
     # проверка на тип запроса
     if data["search"]:

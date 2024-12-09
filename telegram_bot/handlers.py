@@ -171,7 +171,7 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
         await message.answer("Идет сбор статистики, ожидайте•••",
                              reply_markup=kb.start_button,
                              resize_keyboard=True)
-        await message.answer_document(document=await make_req(data, 0, message.chat.id))
+        await make_req(data, 0, message.chat.id)
     else:
         await message.answer("Поиск•••")
         data_from_parser = await make_req(data, 0, message.chat.id) # запрос в парсер

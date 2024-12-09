@@ -4,6 +4,7 @@ import aiohttp
 import json
 from dotenv import load_dotenv
 from parser.make_csv import data
+import asyncio
 
 # получение данных из dotenv
 load_dotenv()
@@ -27,6 +28,7 @@ class Parser():
     def make_params(self, base_params : dict) -> dict: #работа с None
         new_params = dict()
         new_params['area'] = base_params['area']
+        new_params['only_with_salary'] = base_params['only_with_salary']
         if base_params['text'] is not None:
             new_params['text'] = base_params['text']
         if base_params['experience'] is not None:
@@ -93,10 +95,10 @@ if __name__ == '__main__':
             'area': 113,
             'text': 'Водитель',
             'per_page': 50,
-            'only_with_salary': None,
+            'only_with_salary': "True",
             'experience' : None,
             'employment': None,
             'sort': None
         }
-    k = Parser(params, True)
+    k = Parser(params, False, 0)
     # True - статистика по вакансиям (csv), False - вакансии

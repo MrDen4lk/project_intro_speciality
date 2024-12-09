@@ -3,7 +3,7 @@ import io
 import os
 import pandas as pd
 from dask.dataframe import DataFrame
-from aiogram import types, Bot
+from aiogram import Bot
 from dotenv import load_dotenv
 from aiogram.types import FSInputFile
 
@@ -25,8 +25,8 @@ async def data(vac_list : list[dict], chat_id : int) -> None:
         salary_from = 'None'
         salary_to = 'None'
         if salary:
-            salary_from = salary.get('from')
-            salary_to = salary.get('to')
+            salary_from = (salary.get('from') if salary.get('from') is not None else 'None')
+            salary_to = (salary.get('to') if salary.get('to') is not None else 'None')
         name_list[i] = (vac.get("name"))
         employer_list[i] = (vac.get('employer', {}).get('name'))
         employment_list[i] = (vac.get("employment", {}).get("name"))
@@ -40,10 +40,10 @@ async def data(vac_list : list[dict], chat_id : int) -> None:
                        "Занятость": employment_list, "Город": city_list,
                        "Опыт": experience_list, "зп_от": salary_from_list,
                        "зп_до": salary_to_list})
-    #Отправляем csv
+
+    # Отправляем csv
     csv_file_path = "data.csv"
     df.to_csv(csv_file_path, index=False)
-    inp_file = FSInputFile(csv_file_path)
     async with Bot(token=os.getenv("TG_TOKEN")) as bot:
-        await bot.send_document(chat_id=chat_id, document=inp_file)
-        os.remove(csv_file_path)
+        await bot.send_document(chat_id=chat_id, document=FSInputFile(csv_file_path))
+    os.remove(csv_file_path)

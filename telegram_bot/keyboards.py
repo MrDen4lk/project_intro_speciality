@@ -1,5 +1,4 @@
 import database.dynamic_db as ddb
-
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -168,10 +167,10 @@ async def inline_text_chosen(chosen: str) -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Поиск завершен✅", callback_data="pressed")]
     ])
-    return InlineKeyboardMarkup(inline_keyboard=[])
+    return InlineKeyboardMarkup(inline_keyboard=list())
 
 # клавиатура для следующей/предыдущей вакансии
-async def inline_pages_builder(user_id) -> InlineKeyboardMarkup:
+async def inline_pages_builder(user_id: int) -> InlineKeyboardMarkup:
     data = await ddb.get_user(user_id) # получение данных пользователя из БД
     inline_pages = InlineKeyboardBuilder() # создание конструктора для кнопки next/prev
     inline_pages.row(
@@ -183,7 +182,7 @@ async def inline_pages_builder(user_id) -> InlineKeyboardMarkup:
     return inline_pages.as_markup()
 
 # клавиатура для выбранной вакансии + ✅ у выбранного
-async def inline_pages_builder_chosen(user_id) -> InlineKeyboardMarkup:
+async def inline_pages_builder_chosen(user_id: int) -> InlineKeyboardMarkup:
     data = await ddb.get_user(user_id) # # создание конструктора для кнопки next/prev _chosen
     inline_pages = InlineKeyboardBuilder()
     inline_pages.add(InlineKeyboardButton(text="<=", callback_data="pressed"))

@@ -1,11 +1,9 @@
 from parser.main import Parser
 import database.dynamic_db as ddb
-
 import logging
-import csv
 
 # функция для обработки запросов пользователя на поиск вакансий и статистику
-async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
+async def make_req(data: dict, page: int, chat_id: int) -> list or None:
     logging.info(data) # логирование полученных данных от пользователя
 
     # обработка полученных данных
@@ -18,7 +16,7 @@ async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
     req = {
         "area": (town.city_id if town is not None else 113),
         "text": data["text"],
-        "per_page" : 50,
+        "per_page": 50,
         "only_with_salary": (await ddb.get_salary(data["salary"], "value")).key,
         "experience": (experience if experience != "any_exp" else None),
         "employment": (employment if employment != "any_empl" else None),
@@ -32,7 +30,7 @@ async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
 
     # проверка на тип запроса
     if data["search"]:
-        return await answer.main(0)
+        await answer.main(0)
     else:
         back_return = list()
         # форматирование полученных данных
@@ -41,7 +39,7 @@ async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
             employer = req_answer.get('employer', {}).get('name')
             salary = req_answer.get('salary')
             url_vacancy = req_answer.get('alternate_url')
-            salary_info = ""
+            salary_info = str()
             if salary:
                 salary_from = salary.get('from')
                 salary_to = salary.get('to')
@@ -57,10 +55,10 @@ async def make_req(data: dict, page: int, chat_id: int) -> list or csv:
 
             # формирование данных для return
             back_req = {
-                "title" : title,
-                "employer" : employer,
-                "salary_info" : salary_info,
-                "url" : url_vacancy,
+                "title": title,
+                "employer": employer,
+                "salary_info": salary_info,
+                "url": url_vacancy,
             }
             back_return.append(back_req)
 

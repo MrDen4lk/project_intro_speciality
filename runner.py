@@ -1,5 +1,4 @@
 from telegram_bot.handlers import router, send_daily_message
-
 import logging
 import os
 import asyncio

@@ -6,6 +6,7 @@ import json
 import asyncio
 import os
 
+# получение данных из dotenv
 load_dotenv()
 
 # создаем движок нашей БД, c данными из .env (echo - выводит всё)
@@ -93,7 +94,7 @@ async def delete_tables() -> None:
 
 ''' ИНТЕРФЕЙС ВЗАИМОДЕЙТСВИЯ '''
 # добавляем пользователя в таблицу
-async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, history_req : list, history_ans : list, history_req_stat : list) -> None:
+async def add_user(user_id: int, vac_now: int, vac_total: int, page: int, history_req: list, history_ans: list, history_req_stat: list) -> None:
 
     async with new_session() as session:
         async with session.begin():
@@ -115,7 +116,7 @@ async def add_user(user_id : int, vac_now : int, vac_total : int, page : int, hi
                 pass
 
 # включение значений в таблицу cities из файла
-async def add_cities(file_path : str) -> None:
+async def add_cities(file_path: str) -> None:
     async with new_session() as session:
         async with session.begin():
             with open(file_path, 'r', encoding='utf-8') as f:

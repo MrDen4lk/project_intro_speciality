@@ -1,15 +1,13 @@
-import csv
-import io
 import os
 import pandas as pd
-from dask.dataframe import DataFrame
 from aiogram import Bot
 from dotenv import load_dotenv
 from aiogram.types import FSInputFile
 
+# получение данных из dotenv
 load_dotenv()
 
-async def data(vac_list : list[dict], chat_id : int) -> None:
+async def data(vac_list: list[dict], chat_id: int) -> None:
     #Создаём lists для хранения значений и дальнейшей передачи их в csv
     name_list = [0] * len(vac_list)
     employer_list = [0] * len(vac_list)

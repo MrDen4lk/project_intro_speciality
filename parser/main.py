@@ -1,17 +1,16 @@
+from parser.make_csv import data
 import csv
 import os
 import aiohttp
 import json
 from dotenv import load_dotenv
-from parser.make_csv import data
-import asyncio
 
 # получение данных из dotenv
 load_dotenv()
 
 class Parser():
 
-    def __init__(self, params, is_static, chat_id):
+    def __init__(self, params: dict, is_static: bool, chat_id: int) -> None:
         # Токен обновлять раз в две недели
         self.hh_api_token = os.getenv("HH_TOKEN")
         self.url = os.getenv("HH_URL")
@@ -25,7 +24,7 @@ class Parser():
         self.is_static = is_static
         self.per_page = params['per_page']
 
-    def make_params(self, base_params : dict) -> dict: #работа с None
+    def make_params(self, base_params: dict) -> dict: #работа с None
         new_params = dict()
         new_params['area'] = base_params['area']
         new_params['only_with_salary'] = base_params['only_with_salary']
@@ -41,19 +40,19 @@ class Parser():
 
 
     # Получение json со страницы
-    async def fetch_vacancies(self, session, url : str, params : dict) -> json:
+    async def fetch_vacancies(self, session, url: str, params: dict) -> json:
         async with session.get(url, params=params, headers=self.headers) as response:
             response.raise_for_status()
             return await response.json()
 
     #
-    async def fetch_all_vacancies(self, page_num : int) -> tuple[list[dict], int]:
+    async def fetch_all_vacancies(self, page_num: int) -> tuple[list[dict], int]:
         async with aiohttp.ClientSession() as session: # <- постоянное соединение с сервером
             total_vacancies = 0
             paramet = self.base_params.copy()
             paramet['page'] = page_num
             data = await (Parser.fetch_vacancies(self, session, self.url, paramet))
-            all_vacancies = []
+            all_vacancies = list()
 
             try:
                     total_vacancies = data.get('found', 0)
@@ -66,11 +65,11 @@ class Parser():
 
             return all_vacancies, total_vacancies
 
-    async def main(self, page_number : int) -> dict or csv: # <- возвращает json с вакансиями или csv
+    async def main(self, page_number: int) -> dict or None: # <- возвращает json с вакансиями или csv
         # page_number - номер страницы которую нужно обработать (индексация с 0)
         vacancies = await Parser.fetch_all_vacancies(self, page_number)
         if self.is_static:
-            static_vacancies = []
+            static_vacancies = list()
             static_vacancies.extend(vacancies[0])
             total_vacancies = vacancies[1]
             #максимум можно получить 2000 вакансий
@@ -86,7 +85,7 @@ class Parser():
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1
             #data превращает list[json] в csv
-            return await data(static_vacancies, self.chat_id)
+            await data(static_vacancies, self.chat_id)
         else:
             return vacancies[0]
 
@@ -96,7 +95,7 @@ if __name__ == '__main__':
             'text': 'Водитель',
             'per_page': 50,
             'only_with_salary': "True",
-            'experience' : None,
+            'experience': None,
             'employment': None,
             'sort': None
         }

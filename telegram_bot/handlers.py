@@ -1,7 +1,6 @@
 import telegram_bot.keyboards as kb
 from telegram_bot.user_requests import make_req
 import database.dynamic_db as ddb
-
 import json
 import logging
 from aiogram import F, Router, Bot
@@ -34,7 +33,7 @@ async def send_daily_message(bot: Bot) -> None:
                 # получение последнего запроса пользователя
                 data_req = json.loads(data[-1])
                 data_req["sort"] = "Свежести"
-                data_from_parser = await make_req(data_req, 0)
+                data_from_parser = await make_req(data_req, 0, 0)
 
                 # формирование текста сообщения
                 text = (f"✔ {data_from_parser[0]['title']}\n✔ {data_from_parser[0]['employer']}\n"
@@ -51,7 +50,7 @@ async def send_daily_message(bot: Bot) -> None:
 async def cmd_start(message: Message) -> None:
     # добавление пользователя в БД
     await ddb.add_user(user_id=message.from_user.id,
-                       vac_now=0, vac_total=0, page=0, history_req=[], history_ans=[], history_req_stat=[])
+                       vac_now=0, vac_total=0, page=0, history_req=list(), history_ans=list(), history_req_stat=list())
     await message.answer(f"Привет!\nЯ помогу тебе найти работу мечты",
                          reply_markup=kb.start_button,
                          resize_keyboard=True)
@@ -190,14 +189,12 @@ async def cmd_text(message: Message, state: FSMContext) -> None:
 
         # проверка на то найдены ли вакансии
         if vac_total == 0:
-            text = "Подходящих вакансий не найдено"
-            await message.answer(text,
+            await message.answer("Подходящих вакансий не найдено",
                                  reply_markup=kb.start_button,
                                  resize_keyboard=True)
         else:
             text = (f"✔ {data_from_parser[0]['title']}\n✔ {data_from_parser[0]['employer']}\n"
                     f"✔ {data_from_parser[0]['salary_info']}\n✔ {data_from_parser[0]['url']}")
-
             await message.answer(text,
                                  reply_markup=await kb.inline_pages_builder(user_id))
 
@@ -213,7 +210,6 @@ async def cmd_next(callback: CallbackQuery) -> None:
             f"✔ {data_for_text['employer']}\n"
             f"✔ {data_for_text['salary_info']}\n"
             f"✔ {data_for_text['url']}")
-
     await callback.message.edit_text(text,
                                      reply_markup=await kb.inline_pages_builder(user_id))
 
@@ -249,8 +245,8 @@ async def cmd_more(callback: CallbackQuery):
         for item in data_from_parser:
             txt += json.dumps(item, ensure_ascii=False) + "#"
         await ddb.update_user(callback.from_user.id, {"vac_now": vac_now, "vac_total": vac_total, "page": data.page + 1,
-                                                               "history_req" : [json.dumps(request_to_parser, ensure_ascii=False)],
-                                                               "history_ans" : [txt]})
+                                                               "history_req": [json.dumps(request_to_parser, ensure_ascii=False)],
+                                                               "history_ans": [txt]})
 
         # проверка на то найдены ли вакансии
         if vac_total == 0:
@@ -263,8 +259,6 @@ async def cmd_more(callback: CallbackQuery):
                     f"✔ {data_from_parser[0]['salary_info']}\n✔ {data_from_parser[0]['url']}")
             await callback.message.edit_text(text,
                                              reply_markup=await kb.inline_pages_builder(callback.from_user.id))
-
-
 
 # обработка завершить запрос в town
 @router.callback_query(F.data == "town_end")

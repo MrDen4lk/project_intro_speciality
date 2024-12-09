@@ -8,15 +8,18 @@ import pandas as pd
 from dotenv import load_dotenv
 from make_csv import data
 
+load_dotenv()
+
 # получение данных из dotenv
 load_dotenv()
 
 class Parser():
 
-    def __init__(self, params, is_static):
+    def __init__(self, params : dict, is_static : bool, chat_id : int):
         # Токен обновлять раз в две недели
         self.hh_api_token = os.getenv("HH_TOKEN")
         self.url = os.getenv("HH_URL")
+        self.chat_id = chat_id
         self.headers = {
             'Authorization': f'Bearer {self.hh_api_token}',
             'User-Agent': 'Python/requests',
@@ -87,7 +90,7 @@ class Parser():
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1
             #data превращает list[json] в csv
-            data(static_vacancies)
+            return await data(static_vacancies, self.chat_id)
         else:
             return vacancies[0]
 
@@ -100,6 +103,6 @@ if __name__ == '__main__':
             'employment': None,
             'sort': None
         }
-    k = Parser(params, True)
+    k = Parser(params, False, 0)
     print(asyncio.run(k.main(0)))
     # True - статистика по вакансиям (csv), False - вакансии

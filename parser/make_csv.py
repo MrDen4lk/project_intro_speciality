@@ -20,8 +20,10 @@ async def data(vac_list: list[dict], chat_id: int) -> None:
     #Добавляем признаки в lists
     for vac in vac_list:
         salary = vac.get('salary')
+        # Если не указана зп_от или зп_до то в колонке будет "None"
         salary_from = 'None'
         salary_to = 'None'
+        # Добавляем в новые lists получанные от парсера данные
         if salary:
             salary_from = (salary.get('from') if salary.get('from') is not None else 'None')
             salary_to = (salary.get('to') if salary.get('to') is not None else 'None')
@@ -33,13 +35,13 @@ async def data(vac_list: list[dict], chat_id: int) -> None:
         salary_from_list[i] = salary_from
         salary_to_list[i] = salary_to
         i += 1
-    #Создаём dataframe
+    #Создаём dataframe с этими lists
     df = pd.DataFrame({"Профессия": name_list, "Компания": employer_list,
                        "Занятость": employment_list, "Город": city_list,
                        "Опыт": experience_list, "зп_от": salary_from_list,
                        "зп_до": salary_to_list})
 
-    # Отправляем csv
+    # Преобразуем в csv и отправляем
     csv_file_path = "data.csv"
     df.to_csv(csv_file_path, index=False)
     async with Bot(token=os.getenv("TG_TOKEN")) as bot:

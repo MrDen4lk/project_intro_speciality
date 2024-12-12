@@ -25,8 +25,9 @@ class Parser():
 
     def make_params(self, base_params: dict) -> dict: #работа с None, если None то в запрос не добавляем
         new_params = dict()
-        new_params['area'] = base_params['area']
-        new_params['only_with_salary'] = base_params['only_with_salary']
+        new_params['area'] = base_params['area'] # не может быть None
+        new_params['only_with_salary'] = base_params['only_with_salary'] # не может быть None
+        # Если None, то в запрос не добавляем
         if base_params['text'] is not None:
             new_params['text'] = base_params['text']
         if base_params['experience'] is not None:
@@ -46,17 +47,17 @@ class Parser():
 
     #
     async def fetch_all_vacancies(self, page_num: int) -> tuple[list[dict], int]:
-        async with aiohttp.ClientSession() as session: # <- постоянное соединение с сервером
-            total_vacancies = 0
+        async with aiohttp.ClientSession() as session: # <- постоянное соединение
+            total_vacancies = 0 # Количество всех вакансий по запросу
             paramet = self.base_params.copy()
             paramet['page'] = page_num
-            data = await (Parser.fetch_vacancies(self, session, self.url, paramet))
+            data = await (Parser.fetch_vacancies(self, session, self.url, paramet)) # Получаем вакансии со страницы
             all_vacancies = list()
 
             try:
                     total_vacancies = data.get('found', 0)
                     all_vacancies.extend(data.get('items', []))
-
+            # Ловим ошибки
             except aiohttp.ClientResponseError as http_err:
                 print(f"HTTP ошибка произошла: {http_err.status} - {http_err.message}")
             except Exception as err:
@@ -67,7 +68,7 @@ class Parser():
     async def main(self, page_number: int) -> dict or None: # <- возвращает json с вакансиями или csv отправляется сразу в бота
         # page_number - номер страницы которую нужно обработать (индексация с 0)
         vacancies = await Parser.fetch_all_vacancies(self, page_number)
-        if self.is_static:
+        if self.is_static: # Сбор статистики
             static_vacancies = list()
             static_vacancies.extend(vacancies[0])
             total_vacancies = vacancies[1]
@@ -79,7 +80,7 @@ class Parser():
 
             #цикл по страницам
             page_number_iterator = 1
-            while len(static_vacancies) < total_vacancies:
+            while len(static_vacancies) < total_vacancies: # Заполняем list с вакансиями
                 vac = await Parser.fetch_all_vacancies(self, page_number_iterator)
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1

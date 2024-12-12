@@ -11,7 +11,6 @@ load_dotenv()
 class Parser():
 
     def __init__(self, params: dict, is_static: bool, chat_id: int) -> None:
-        # Токен обновлять раз в две недели
         self.hh_api_token = os.getenv("HH_TOKEN")
         self.url = os.getenv("HH_URL")
         self.chat_id = chat_id
@@ -20,11 +19,11 @@ class Parser():
             'User-Agent': 'Python/requests',
             'Accept': 'application/json'
         }
-        self.base_params = Parser.make_params(self, params)
+        self.base_params = Parser.make_params(self, params) #<- обрабатываем параметры запроса
         self.is_static = is_static
         self.per_page = params['per_page']
 
-    def make_params(self, base_params: dict) -> dict: #работа с None
+    def make_params(self, base_params: dict) -> dict: #работа с None, если None то в запрос не добавляем
         new_params = dict()
         new_params['area'] = base_params['area']
         new_params['only_with_salary'] = base_params['only_with_salary']
@@ -65,14 +64,14 @@ class Parser():
 
             return all_vacancies, total_vacancies
 
-    async def main(self, page_number: int) -> dict or None: # <- возвращает json с вакансиями или csv
+    async def main(self, page_number: int) -> dict or None: # <- возвращает json с вакансиями или csv отправляется сразу в бота
         # page_number - номер страницы которую нужно обработать (индексация с 0)
         vacancies = await Parser.fetch_all_vacancies(self, page_number)
         if self.is_static:
             static_vacancies = list()
             static_vacancies.extend(vacancies[0])
             total_vacancies = vacancies[1]
-            #максимум можно получить 2000 вакансий
+            #максимум можно получить 1000 вакансий
             if total_vacancies > 2000:
                 total_vacancies = 2000
             if total_vacancies > 300:
@@ -84,7 +83,7 @@ class Parser():
                 vac = await Parser.fetch_all_vacancies(self, page_number_iterator)
                 static_vacancies.extend(vac[0])
                 page_number_iterator += 1
-            #data превращает list[json] в csv
+            #data превращает list[json] в csv и отправляет в бота
             await data(static_vacancies, self.chat_id)
         else:
             return vacancies[0]

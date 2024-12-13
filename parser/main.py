@@ -45,7 +45,7 @@ class Parser():
             response.raise_for_status()
             return await response.json()
 
-    #
+    # Обрабатываем полученый json вакансий
     async def fetch_all_vacancies(self, page_num: int) -> tuple[list[dict], int]:
         async with aiohttp.ClientSession() as session: # <- постоянное соединение
             total_vacancies = 0 # Количество всех вакансий по запросу
